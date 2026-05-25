@@ -1,0 +1,121 @@
+package com.twojanazwa.animon.feature.auth.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.animon.core.designsystem.AnimonBeige
+import com.example.animon.core.designsystem.AnimonDarkGreen
+import com.example.animon.core.designsystem.AnimonGreen
+
+@Composable
+fun LoginScreen() {
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AnimonGreen)
+            .padding(horizontal = 40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(150.dp)
+                .background(AnimonBeige, shape = CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Pets,
+                contentDescription = "Logo Animon",
+                modifier = Modifier.size(90.dp),
+                tint = AnimonGreen
+            )
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "ANIMON",
+            fontSize = 52.sp,
+            fontWeight = FontWeight.Bold,
+            color = AnimonBeige,
+            letterSpacing = 4.sp
+        )
+
+        Text(
+            text = "Smart Animal Care",
+            fontSize = 18.sp,
+            color = AnimonBeige,
+            letterSpacing = 1.sp
+        )
+        Spacer(modifier = Modifier.height(40.dp))
+
+        TextField(
+            value = username,
+            onValueChange = { username = it },
+            placeholder = { Text("Nazwa użytkownika...", color = Color.Gray) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            shape = RoundedCornerShape(25.dp),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = AnimonBeige,
+                unfocusedContainerColor = AnimonBeige,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedTextColor = AnimonDarkGreen
+            )
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextField(
+            value = password,
+            onValueChange = { password = it },
+            placeholder = { Text("Hasło...", color = Color.Gray) },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp),
+            shape = RoundedCornerShape(25.dp),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = AnimonBeige,
+                unfocusedContainerColor = AnimonBeige,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedTextColor = AnimonDarkGreen
+            )
+        )
+        Spacer(modifier = Modifier.height(70.dp))
+
+        Button(
+            onClick = { /* walidacja + home */ },
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .height(60.dp),
+            shape = RoundedCornerShape(30.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = AnimonBeige,
+                contentColor = AnimonDarkGreen
+            )
+        ) {
+            Text(
+                text = "ZALOGUJ SIĘ",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
+        }
+    }
+}
