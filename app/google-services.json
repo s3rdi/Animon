@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "402531520971",
+    "project_id": "animon-37796",
+    "storage_bucket": "animon-37796.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402531520971:android:651674f11bbbc0da67264e",
+        "android_client_info": {
+          "package_name": "com.example.animon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCwBioB4DLbVmw4ehC1rL3mSpyGgSiH6iI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

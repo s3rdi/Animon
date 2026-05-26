@@ -1,4 +1,4 @@
-package com.twojanazwa.animon.feature.auth.ui
+package com.example.animon.feature.auth.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -26,11 +26,11 @@ import kotlinx.coroutines.delay
 import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonDarkGreen
 import com.example.animon.core.designsystem.AnimonGreen
+import com.example.animon.feature.auth.viewmodel.LoginScreenViewModel
 
 @Composable
-fun LoginScreen() {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+fun LoginScreen(viewModel: LoginScreenViewModel = LoginScreenViewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
 
     var isLogoVisible by remember { mutableStateOf(false) }
     var isTitleVisible by remember { mutableStateOf(false) }
@@ -112,9 +112,9 @@ fun LoginScreen() {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 TextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    placeholder = { Text("Nazwa użytkownika...", color = Color.Gray) },
+                    value = uiState.email,
+                    onValueChange = { viewModel.onEmailChange(it) },
+                    placeholder = { Text("Email...", color = Color.Gray) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(55.dp),
@@ -130,8 +130,8 @@ fun LoginScreen() {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextField(
-                    value = password,
-                    onValueChange = { password = it },
+                    value = uiState.password,
+                    onValueChange = { viewModel.onPasswordChange(it) },
                     placeholder = { Text("Hasło...", color = Color.Gray) },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier
@@ -147,24 +147,45 @@ fun LoginScreen() {
                     )
                 )
 
+                if (uiState.errorMessage != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = uiState.errorMessage ?: "",
+                        color = AnimonBeige,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(70.dp))
 
-                Button(
-                    onClick = { /* walidacja + home */ },
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .height(60.dp),
-                    shape = RoundedCornerShape(30.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AnimonBeige,
-                        contentColor = AnimonDarkGreen
-                    )
-                ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(color = AnimonBeige)
+                } else if (uiState.isLoginSuccessful) {
                     Text(
-                        text = "ZALOGUJ SIĘ",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        text = "Pomyślnie zalogowano!",
+                        color = Color.Green,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
                     )
+                } else {
+                    Button(
+                        onClick = { viewModel.loginWithEmailAndPassword() },
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .height(60.dp),
+                        shape = RoundedCornerShape(30.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AnimonBeige,
+                            contentColor = AnimonDarkGreen
+                        )
+                    ) {
+                        Text(
+                            text = "ZALOGUJ SIĘ",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
                 }
             }
         }
