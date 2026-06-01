@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonDarkGreen
@@ -29,12 +30,23 @@ import com.example.animon.core.designsystem.AnimonGreen
 import com.example.animon.feature.auth.viewmodel.LoginScreenViewModel
 
 @Composable
-fun LoginScreen(viewModel: LoginScreenViewModel = LoginScreenViewModel()) {
+fun LoginScreen(
+    viewModel: LoginScreenViewModel = viewModel(),
+    onLoginSuccess: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     var isLogoVisible by remember { mutableStateOf(false) }
     var isTitleVisible by remember { mutableStateOf(false) }
     var isFormVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.loginEvent.collect { isSuccess ->
+            if (isSuccess) {
+                onLoginSuccess()
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         isLogoVisible = true
@@ -147,27 +159,19 @@ fun LoginScreen(viewModel: LoginScreenViewModel = LoginScreenViewModel()) {
                     )
                 )
 
-                if (uiState.errorMessage != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = uiState.errorMessage ?: "",
-                        color = AnimonBeige,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = uiState.errorMessage ?: "",
+                    color = AnimonBeige,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
 
                 Spacer(modifier = Modifier.height(70.dp))
 
                 if (uiState.isLoading) {
                     CircularProgressIndicator(color = AnimonBeige)
-                } else if (uiState.isLoginSuccessful) {
-                    Text(
-                        text = "Pomyślnie zalogowano!",
-                        color = Color.Green,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
                 } else {
                     Button(
                         onClick = { viewModel.loginWithEmailAndPassword() },

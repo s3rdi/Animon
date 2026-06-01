@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,14 +42,13 @@ import com.example.animon.R
 import com.example.animon.core.designsystem.AnimonGreen
 
 @Composable
-fun AnimalDetailsScreen(padding: PaddingValues) {
+fun AnimalDetailsScreen() {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Dane podstawowe", "Dane medyczne", "Paszport")
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(padding)
             .padding(top = 32.dp, start = 16.dp, end = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
