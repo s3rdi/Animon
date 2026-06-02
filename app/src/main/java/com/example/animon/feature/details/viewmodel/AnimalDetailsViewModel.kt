@@ -21,7 +21,9 @@ data class MedicalRecord(
     val id: String = "",
     val title: String = "",
     val date: String = "",
-    val description: String = ""
+    val description: String = "",
+    val vetId: String = "",
+    val vetName: String = ""
 )
 
 data class PassportSection(

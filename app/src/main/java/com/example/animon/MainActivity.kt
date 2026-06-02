@@ -25,6 +25,7 @@ import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonGreen
@@ -35,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.animon.feature.profile.ui.ProfileScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,7 +48,7 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = rootNavController,
-                    startDestination = "main"
+                    startDestination = "login"
                 ) {
                     composable("login") {
                         LoginScreen(
@@ -59,7 +61,7 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("main") {
-                        MainAppContainer()
+                        MainAppContainer(rootNavController = rootNavController)
                     }
                 }
             }
@@ -69,7 +71,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainAppContainer() {
+fun MainAppContainer(rootNavController: NavHostController) {
     val internalNavController = rememberNavController()
 
     Scaffold(
@@ -115,7 +117,13 @@ fun MainAppContainer() {
                         )
                     }
 
-                    IconButton(onClick = {  }) {
+                    IconButton(onClick = {
+                        internalNavController.navigate("my_profile") {
+                            popUpTo(internalNavController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.Default.AccountCircle,
                             contentDescription = "Konto",
@@ -135,7 +143,21 @@ fun MainAppContainer() {
                 arguments = listOf(
                     navArgument("animalId") { type = NavType.StringType }
                 )) {
-                AnimalDetailsScreen()
+                AnimalDetailsScreen(navController = internalNavController)
+            }
+
+            composable(route = "my_profile") {
+                ProfileScreen(onLogout = {
+                    rootNavController.navigate("login") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                })
+            }
+
+            composable(route = "profile/{userId}",
+                arguments = listOf(navArgument("userId") { type = NavType.StringType })
+            ) {
+                ProfileScreen(onLogout = {})
             }
         }
     }

@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AssignmentInd
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LocationOn
@@ -54,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.animon.R
+import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonGreen
 import com.example.animon.core.designsystem.AnimonTileBeige
 import com.example.animon.core.designsystem.AnimonTileGreen
@@ -64,7 +66,8 @@ import com.example.animon.feature.details.viewmodel.PassportSection
 
 @Composable
 fun AnimalDetailsScreen(
-    viewModel: AnimalDetailsViewModel = viewModel()
+    viewModel: AnimalDetailsViewModel = viewModel(),
+    navController: androidx.navigation.NavController // Przekazany parametr do nawigacji
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Dane podstawowe", "Dane medyczne", "Paszport")
@@ -107,7 +110,7 @@ fun AnimalDetailsScreen(
             } else {
                 when (selectedTabIndex) {
                     0 -> BasicInfoContent(animal = animalData!!)
-                    1 -> MedicalInfoContent(records = medicalRecords)
+                    1 -> MedicalInfoContent(records = medicalRecords, navController = navController)
                     2 -> PassportContent(sections = passportSections)
                 }
             }
@@ -147,8 +150,7 @@ fun AnimalHeader(
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground,
         letterSpacing = 0.5.sp,
-        modifier = Modifier
-            .padding(top = 20.dp)
+        modifier = Modifier.padding(top = 20.dp)
     )
 
     Spacer(modifier = Modifier.size(12.dp))
@@ -274,10 +276,45 @@ fun BasicInfoContent(animal: AnimalData) {
 }
 
 @Composable
+fun MedicalInfoContent(
+    records: List<MedicalRecord>,
+    navController: androidx.navigation.NavController
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        if (records.isEmpty()) {
+            Text(
+                text = "Brak wpisów medycznych dla tego zwierzęcia.",
+                modifier = Modifier.padding(16.dp),
+                textAlign = TextAlign.Center
+            )
+        } else {
+            records.forEach { record ->
+                MedicalInfoTile(
+                    title = record.title,
+                    date = record.date,
+                    description = record.description,
+                    vetId = record.vetId,
+                    vetName = record.vetName,
+                    navController = navController
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun MedicalInfoTile(
     title: String,
     date: String,
-    description: String
+    description: String,
+    vetId: String,
+    vetName: String,
+    navController: androidx.navigation.NavController
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
@@ -306,7 +343,6 @@ fun MedicalInfoTile(
                     tint = AnimonTileBeige,
                     modifier = Modifier.padding(end = 8.dp)
                 )
-
                 Text(
                     text = title,
                     fontSize = 16.sp,
@@ -314,13 +350,10 @@ fun MedicalInfoTile(
                     fontWeight = FontWeight.SemiBold
                 )
             }
-
             Text(
                 text = date,
                 fontSize = 14.sp,
-                color = AnimonTileBeige.copy(alpha = 0.8f),
-                fontWeight = FontWeight.Normal,
-                modifier = Modifier.padding(start = 8.dp)
+                color = AnimonTileBeige.copy(alpha = 0.8f)
             )
         }
 
@@ -345,32 +378,46 @@ fun MedicalInfoTile(
                     color = AnimonTileBeige.copy(alpha = 0.9f),
                     lineHeight = 20.sp
                 )
-            }
-        }
-    }
-}
 
-@Composable
-fun MedicalInfoContent(records: List<MedicalRecord>) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        if (records.isEmpty()) {
-            Text(
-                text = "Brak wpisów medycznych dla tego zwierzęcia.",
-                modifier = Modifier.padding(16.dp),
-                textAlign = TextAlign.Center
-            )
-        } else {
-            records.forEach { record ->
-                MedicalInfoTile(
-                    title = record.title,
-                    date = record.date,
-                    description = record.description
-                )
+                if (vetName.isNotEmpty() && vetId.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .background(
+                                color = AnimonBeige.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .clickable {
+                                val cleanVetId = vetId
+                                    .removePrefix("/")
+                                    .removePrefix("users/")
+                                    .trim()
+
+                                if (cleanVetId.isNotEmpty()) {
+                                    navController.navigate("profile/$cleanVetId")
+                                }
+                            }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AssignmentInd,
+                            contentDescription = "Profil lekarza",
+                            tint = AnimonTileBeige,
+                            modifier = Modifier.size(18.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = "Lekarz prowadzący: $vetName",
+                            fontSize = 13.sp,
+                            color = AnimonTileBeige,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }
