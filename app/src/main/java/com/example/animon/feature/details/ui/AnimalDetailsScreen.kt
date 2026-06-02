@@ -276,34 +276,77 @@ fun BasicInfoContent(animal: AnimalData) {
 @Composable
 fun MedicalInfoTile(
     title: String,
-    date: String
+    date: String,
+    description: String
 ) {
-    Row(
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(
                 color = AnimonTileGreen,
                 shape = RoundedCornerShape(12.dp)
             )
-            .padding(vertical = 16.dp, horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .clickable { isExpanded = !isExpanded }
+            .padding(16.dp)
     ) {
-        Text(
-            text = title,
-            fontSize = 16.sp,
-            color = AnimonTileBeige,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.weight(1f)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (isExpanded) "Zwiń" else "Rozwiń",
+                    tint = AnimonTileBeige,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
 
-        Text(
-            text = date,
-            fontSize = 14.sp,
-            color = AnimonTileBeige.copy(alpha = 0.8f),
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier.padding(start = 8.dp)
-        )
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    color = AnimonTileBeige,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Text(
+                text = date,
+                fontSize = 14.sp,
+                color = AnimonTileBeige.copy(alpha = 0.8f),
+                fontWeight = FontWeight.Normal,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+
+        AnimatedVisibility(visible = isExpanded) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp)
+            ) {
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(AnimonTileBeige.copy(alpha = 0.2f))
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = description.ifEmpty { "Brak dodatkowego opisu dla tego wpisu." },
+                    fontSize = 14.sp,
+                    color = AnimonTileBeige.copy(alpha = 0.9f),
+                    lineHeight = 20.sp
+                )
+            }
+        }
     }
 }
 
@@ -325,7 +368,8 @@ fun MedicalInfoContent(records: List<MedicalRecord>) {
             records.forEach { record ->
                 MedicalInfoTile(
                     title = record.title,
-                    date = record.date
+                    date = record.date,
+                    description = record.description
                 )
             }
         }

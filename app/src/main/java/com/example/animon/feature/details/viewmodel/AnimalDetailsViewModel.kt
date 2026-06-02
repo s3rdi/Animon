@@ -70,7 +70,8 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
                 }
             }
 
-        db.collection("animals").document(animalId).collection("passport").orderBy("order")
+        db.collection("animals").document(animalId).collection("passport")
+            .orderBy("order")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
                 if (snapshot != null) {
