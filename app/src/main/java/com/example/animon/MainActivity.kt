@@ -25,6 +25,7 @@ import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
 import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonGreen
 import com.example.animon.core.designsystem.AnimonTheme
@@ -33,6 +34,7 @@ import com.example.animon.feature.details.ui.AnimalDetailsScreen
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +46,7 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = rootNavController,
-                    startDestination = "login"
+                    startDestination = "main"
                 ) {
                     composable("login") {
                         LoginScreen(
@@ -126,10 +128,13 @@ fun MainAppContainer() {
     ) { innerPadding ->
         NavHost(
             navController = internalNavController,
-            startDestination = "details",
+            startDestination = "details/JMHaTQdwSQmU3YFsFc5z",
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("details") {
+            composable(route = "details/{animalId}",
+                arguments = listOf(
+                    navArgument("animalId") { type = NavType.StringType }
+                )) {
                 AnimalDetailsScreen()
             }
         }
