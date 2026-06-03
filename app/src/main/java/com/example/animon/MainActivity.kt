@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = rootNavController,
-                    startDestination = "main"
+                    startDestination = "login"
                 ) {
                     composable("login") {
                         LoginScreen(
@@ -157,7 +157,11 @@ fun MainAppContainer(rootNavController: NavHostController) {
             composable(route = "profile/{userId}",
                 arguments = listOf(navArgument("userId") { type = NavType.StringType })
             ) {
-                ProfileScreen(onLogout = {})
+                ProfileScreen(onLogout = {
+                    rootNavController.navigate("login") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                })
             }
         }
     }

@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -65,6 +66,14 @@ data class PassportSection(
 )
 class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() {
     private val db = FirebaseFirestore.getInstance()
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+
+    private val animalId: String? = savedStateHandle["animalId"]
+
+    private val _isVeterinarian = MutableStateFlow(false)
+    val isVeterinarian: StateFlow<Boolean> = _isVeterinarian
+
+    private val _currentVetName = MutableStateFlow("")
 
     private val _normsState = MutableStateFlow<AnimalNorms?>(null)
 
@@ -88,10 +97,29 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
     )
 
     init {
-        val animalId: String? = savedStateHandle["animalId"]
         if (animalId != null) {
             loadAnimalDetails(animalId)
+            checkUserRole()
         }
+    }
+
+    private fun checkUserRole() {
+        val currentUserId = auth.currentUser?.uid ?: return
+
+        db.collection("users").document(currentUserId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    val role = document.getString("position")
+                    val firstName = document.getString("firstName")
+                    val secondName = document.getString("secondName")
+
+                    if (role == "Weterynarz") {
+                        _isVeterinarian.value = true
+                        _currentVetName.value = "lek. wet. $firstName $secondName"
+                    }
+                }
+            }
     }
 
     private fun loadAnimalDetails(animalId: String) {
@@ -187,5 +215,23 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
             penaltyPoints >= 0.2 -> AnimalStatus.WARNING
             else -> AnimalStatus.GOOD
         }
+    }
+
+    fun addMedicalRecord(title: String, description: String, date: String) {
+        val id = animalId ?: return
+        val currentUserId = auth.currentUser?.uid ?: ""
+
+        val newRecord = hashMapOf(
+            "title" to title,
+            "description" to description,
+            "date" to date,
+            "vetId" to "users/$currentUserId",
+            "vetName" to _currentVetName.value
+        )
+
+        db.collection("animals")
+            .document(id)
+            .collection("medical_records")
+            .add(newRecord)
     }
 }

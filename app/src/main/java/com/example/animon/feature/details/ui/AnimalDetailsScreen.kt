@@ -66,6 +66,15 @@ import com.example.animon.feature.details.viewmodel.AnimalDetailsViewModel
 import com.example.animon.feature.details.viewmodel.AnimalStatus
 import com.example.animon.feature.details.viewmodel.MedicalRecord
 import com.example.animon.feature.details.viewmodel.PassportSection
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 @Composable
 fun AnimalDetailsScreen(
     viewModel: AnimalDetailsViewModel = viewModel(),
@@ -79,6 +88,8 @@ fun AnimalDetailsScreen(
     val passportSections by viewModel.passportState.collectAsState()
 
     val calculatedStatus by viewModel.calculatedStatusState.collectAsState()
+
+    val isVet by viewModel.isVeterinarian.collectAsState()
 
     Column(
         modifier = Modifier
@@ -114,7 +125,14 @@ fun AnimalDetailsScreen(
             } else {
                 when (selectedTabIndex) {
                     0 -> BasicInfoContent(animal = animalData!!, status = calculatedStatus)
-                    1 -> MedicalInfoContent(records = medicalRecords, navController = navController)
+                    1 -> MedicalInfoContent(
+                        records = medicalRecords,
+                        navController = navController,
+                        isVet = isVet,
+                        onAddNewRecord = { title, desc, date ->
+                            viewModel.addMedicalRecord(title, desc, date)
+                        }
+                    )
                     2 -> PassportContent(sections = passportSections)
                 }
             }
@@ -343,30 +361,59 @@ fun BasicInfoContent(
 @Composable
 fun MedicalInfoContent(
     records: List<MedicalRecord>,
-    navController: NavController
+    navController: NavController,
+    isVet: Boolean,
+    onAddNewRecord: (String, String, String) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        if (records.isEmpty()) {
-            Text(
-                text = "Brak wpisów medycznych dla tego zwierzęcia.",
-                modifier = Modifier.padding(16.dp),
-                textAlign = TextAlign.Center
-            )
-        } else {
-            records.forEach { record ->
-                MedicalInfoTile(
-                    title = record.title,
-                    date = record.date,
-                    description = record.description,
-                    vetId = record.vetId,
-                    vetName = record.vetName,
-                    navController = navController
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        AddMedicalRecordDialog(
+            onDismiss = { showDialog = false },
+            onConfirm = { title, desc, date ->
+                onAddNewRecord(title, desc, date)
+                showDialog = false
+            }
+        )
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        if (isVet) {
+            Button(
+                onClick = { showDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(text = "+ Dodaj nowy wpis medyczny", color = AnimonBeige, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            if (records.isEmpty()) {
+                Text(
+                    text = "Brak wpisów medycznych dla tego zwierzęcia.",
+                    modifier = Modifier.padding(16.dp),
+                    textAlign = TextAlign.Center
                 )
+            } else {
+                records.forEach { record ->
+                    MedicalInfoTile(
+                        title = record.title,
+                        date = record.date,
+                        description = record.description,
+                        vetId = record.vetId,
+                        vetName = record.vetName,
+                        navController = navController
+                    )
+                }
             }
         }
     }
@@ -611,4 +658,59 @@ fun PassportContent(sections: List<PassportSection>) {
 
         Spacer(modifier = Modifier.height(16.dp))
     }
+}
+
+@Composable
+fun AddMedicalRecordDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (title: String, description: String, date: String) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+
+    val currentDate = remember {
+        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date())
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Dodaj wpis medyczny", fontWeight = FontWeight.Bold, color = AnimonGreen) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Tytuł wpisu") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Opis dolegliwości / zalecenia") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+                OutlinedTextField(
+                    value = currentDate,
+                    onValueChange = {  },
+                    label = { Text("Data") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = false
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { if (title.isNotBlank()) onConfirm(title, description, currentDate) },
+                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen)
+            ) {
+                Text("Zapisz", color = AnimonBeige)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Anuluj", color = AnimonGreen)
+            }
+        }
+    )
 }
