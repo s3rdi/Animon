@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -54,6 +55,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.animon.R
 import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonGreen
@@ -61,13 +63,13 @@ import com.example.animon.core.designsystem.AnimonTileBeige
 import com.example.animon.core.designsystem.AnimonTileGreen
 import com.example.animon.feature.details.viewmodel.AnimalData
 import com.example.animon.feature.details.viewmodel.AnimalDetailsViewModel
+import com.example.animon.feature.details.viewmodel.AnimalStatus
 import com.example.animon.feature.details.viewmodel.MedicalRecord
 import com.example.animon.feature.details.viewmodel.PassportSection
-
 @Composable
 fun AnimalDetailsScreen(
     viewModel: AnimalDetailsViewModel = viewModel(),
-    navController: androidx.navigation.NavController // Przekazany parametr do nawigacji
+    navController: NavController
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Dane podstawowe", "Dane medyczne", "Paszport")
@@ -75,6 +77,8 @@ fun AnimalDetailsScreen(
     val animalData by viewModel.animalState.collectAsState()
     val medicalRecords by viewModel.medicalRecordsState.collectAsState()
     val passportSections by viewModel.passportState.collectAsState()
+
+    val calculatedStatus by viewModel.calculatedStatusState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -109,7 +113,7 @@ fun AnimalDetailsScreen(
                 )
             } else {
                 when (selectedTabIndex) {
-                    0 -> BasicInfoContent(animal = animalData!!)
+                    0 -> BasicInfoContent(animal = animalData!!, status = calculatedStatus)
                     1 -> MedicalInfoContent(records = medicalRecords, navController = navController)
                     2 -> PassportContent(sections = passportSections)
                 }
@@ -122,7 +126,7 @@ fun AnimalDetailsScreen(
 fun AnimalImage() {
     Box(
         modifier = Modifier
-            .size(116.dp)
+            .size(106.dp)
             .shadow(elevation = 6.dp, shape = CircleShape)
             .background(MaterialTheme.colorScheme.surface, CircleShape)
             .border(width = 3.dp, color = AnimonGreen, shape = CircleShape),
@@ -133,7 +137,7 @@ fun AnimalImage() {
             contentDescription = "Zdjęcie zwierzęcia",
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(110.dp)
+                .size(100.dp)
                 .clip(CircleShape)
         )
     }
@@ -146,7 +150,7 @@ fun AnimalHeader(
 ) {
     Text(
         text = name,
-        fontSize = 28.sp,
+        fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground,
         letterSpacing = 0.5.sp,
@@ -168,7 +172,7 @@ fun AnimalHeader(
             imageVector = Icons.Default.LocationOn,
             contentDescription = "Lokalizacja zwierzęcia",
             tint = AnimonGreen,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(14.dp)
         )
 
         Spacer(modifier = Modifier.width(6.dp))
@@ -249,14 +253,71 @@ fun InfoTile(
 }
 
 @Composable
-fun BasicInfoContent(animal: AnimalData) {
+fun StatusInfoTile(
+    status: AnimalStatus
+) {
+    Column(
+        modifier = Modifier
+            .background(
+                color = status.color.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .border(
+                width = 2.dp,
+                color = status.color,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Stan zdrowia",
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = status.icon,
+                contentDescription = status.label,
+                tint = status.color,
+                modifier = Modifier.size(22.dp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = status.label,
+                fontSize = 18.sp,
+                color = status.color,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun BasicInfoContent(
+    animal: AnimalData,
+    status: AnimalStatus
+) {
     val infoItems = listOf(
-        "Waga" to animal.weight,
-        "Wiek" to animal.age,
-        "Płeć" to animal.gender,
+        "Data urodzenia" to animal.date_of_birth,
         "Gatunek" to animal.species,
+        "Płeć" to animal.gender,
         "Wielkość" to animal.size,
-        "Kastracja" to animal.castration
+        "Kastracja" to animal.castration,
+        "Waga" to "${animal.weight} kg",
+        "Temperatura" to "${animal.temperature} °C",
+        "Puls" to "${animal.pulse}/min",
+        "Apetyt" to animal.appetite,
+        "Szczepienie" to animal.rabies_vaccination
     )
 
     LazyVerticalGrid(
@@ -265,6 +326,10 @@ fun BasicInfoContent(animal: AnimalData) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxSize()
     ) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            StatusInfoTile(status = status)
+        }
+
         items(infoItems.size) { index ->
             val (label, value) = infoItems[index]
             InfoTile(
@@ -278,7 +343,7 @@ fun BasicInfoContent(animal: AnimalData) {
 @Composable
 fun MedicalInfoContent(
     records: List<MedicalRecord>,
-    navController: androidx.navigation.NavController
+    navController: NavController
 ) {
     Column(
         modifier = Modifier
@@ -314,7 +379,7 @@ fun MedicalInfoTile(
     description: String,
     vetId: String,
     vetName: String,
-    navController: androidx.navigation.NavController
+    navController: NavController
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
