@@ -241,6 +241,14 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
             )
     }
 
+    fun updateAnimalDocument(updatedAnimalData: AnimalData) {
+        val id = animalId ?: return
+
+        db.collection("animals")
+            .document(id)
+            .set(updatedAnimalData)
+    }
+
     private fun checkUserRole() {
         val currentUserId = auth.currentUser?.uid ?: return
 

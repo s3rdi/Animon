@@ -132,7 +132,12 @@ fun AnimalDetailsScreen(
                 )
             } else {
                 when (selectedTabIndex) {
-                    0 -> BasicInfoContent(animal = animalData!!, status = calculatedStatus)
+                    0 -> BasicInfoContent(
+                        animal = animalData!!,
+                        status = calculatedStatus,
+                        onUpdate = {
+                            updatedAnimal -> viewModel.updateAnimalDocument(updatedAnimal)
+                        })
                     1 -> MedicalInfoContent(
                         records = medicalRecords,
                         viewModel = viewModel,
@@ -281,10 +286,11 @@ fun InfoTile(
 
 @Composable
 fun StatusInfoTile(
-    status: AnimalStatus
+    status: AnimalStatus,
+    modifier: Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .background(
                 color = status.color.copy(alpha = 0.2f),
                 shape = RoundedCornerShape(16.dp)
@@ -332,8 +338,22 @@ fun StatusInfoTile(
 @Composable
 fun BasicInfoContent(
     animal: AnimalData,
-    status: AnimalStatus
+    status: AnimalStatus,
+    onUpdate: (AnimalData) -> Unit
 ) {
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    if (showEditDialog) {
+        EditAnimalDetailsDialog(
+            animal = animal,
+            onDismiss = { showEditDialog = false },
+            onConfirm = { updatedAnimal ->
+                onUpdate(updatedAnimal)
+                showEditDialog = false
+            }
+        )
+    }
+
     val infoItems = listOf(
         "Data urodzenia" to animal.date_of_birth,
         "Gatunek" to animal.species,
@@ -354,7 +374,12 @@ fun BasicInfoContent(
         modifier = Modifier.fillMaxSize()
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
-            StatusInfoTile(status = status)
+            StatusInfoTile(
+                status = status,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showEditDialog = true }
+            )
         }
 
         items(infoItems.size) { index ->
@@ -365,6 +390,96 @@ fun BasicInfoContent(
             )
         }
     }
+}
+
+@Composable
+fun EditAnimalDetailsDialog(
+    animal: AnimalData,
+    onDismiss: () -> Unit,
+    onConfirm: (AnimalData) -> Unit
+) {
+    var location by remember { mutableStateOf(animal.location) }
+    var weight by remember { mutableStateOf(animal.weight) }
+    var temperature by remember { mutableStateOf(animal.temperature) }
+    var pulse by remember { mutableStateOf(animal.pulse) }
+    var appetite by remember { mutableStateOf(animal.appetite) }
+    var vaccination by remember { mutableStateOf(animal.rabies_vaccination) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Edytuj parametry życiowe", fontWeight = FontWeight.Bold, color = AnimonGreen) },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = { location = it },
+                    label = { Text("Lokalizacja") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = weight,
+                    onValueChange = { weight = it },
+                    label = { Text("Waga (kg)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = temperature,
+                    onValueChange = { temperature = it },
+                    label = { Text("Temperatura (°C)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = pulse,
+                    onValueChange = { pulse = it },
+                    label = { Text("Puls (/min)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = appetite,
+                    onValueChange = { appetite = it },
+                    label = { Text("Apetyt (Tak/Nie)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = vaccination,
+                    onValueChange = { vaccination = it },
+                    label = { Text("Szczepienie przeciw wściekliźnie") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val updated = animal.copy(
+                        location = location,
+                        weight = weight,
+                        temperature = temperature,
+                        pulse = pulse,
+                        appetite = appetite,
+                        rabies_vaccination = vaccination
+                    )
+                    onConfirm(updated)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen)
+            ) {
+                Text("Zapisz", color = AnimonBeige)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Anuluj", color = AnimonGreen)
+            }
+        }
+    )
 }
 
 @Composable
