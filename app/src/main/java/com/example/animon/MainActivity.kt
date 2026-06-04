@@ -76,15 +76,6 @@ fun MainAppContainer(rootNavController: NavHostController) {
     val internalNavController = rememberNavController()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Tytuł widoku") },
-                colors = topAppBarColors(
-                    containerColor = AnimonGreen,
-                    titleContentColor = AnimonBeige,
-                )
-            )
-        },
         bottomBar = {
             BottomAppBar(
                 containerColor = AnimonGreen,
@@ -144,7 +135,7 @@ fun MainAppContainer(rootNavController: NavHostController) {
         NavHost(
             navController = internalNavController,
             startDestination = "home",
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
         ) {
             composable(route = "home") {
                 HomeScreen()
