@@ -20,43 +20,38 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonDarkGreen
-
-// do usunięcia
-data class AnimalMock(
-    val name: String,
-    val sector: String,
-    val hasImage: Boolean
-)
+import com.example.animon.feature.home.viewmodel.HomeViewModel
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    viewModel: HomeViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+
     val availableSectors = listOf("Terrarium", "Afrykarium", "Ptaszarnia", "Akwarium", "Wybieg Północny")
-    var selectedSector by remember { mutableStateOf<String?>(null) }
-    val mockAnimals = remember {
-        listOf(
-            AnimalMock("Ling-Ling", "Terrarium", true),
-            AnimalMock("", "Terrarium", false),
-            AnimalMock("", "Terrarium", false),
-            AnimalMock("", "Terrarium", false),
-            AnimalMock("", "Terrarium", false),
-            AnimalMock("", "Terrarium", false),
-            AnimalMock("Simba", "Afrykarium", false),
-            AnimalMock("", "Afrykarium", false),
-            AnimalMock("", "Afrykarium", false)
-        )
-    }
 
-    val filteredAnimals = if (selectedSector == null) {
-        mockAnimals
+    var filteredAnimals = if (uiState.selectedSector == null) {
+        uiState.animals
     } else {
-        mockAnimals.filter { it.sector == selectedSector }
+        uiState.animals.filter { it.location == uiState.selectedSector }
     }
 
-    val groupedAnimals = filteredAnimals.groupBy { it.sector }
+    if (searchQuery.isNotBlank()) {
+        val query = searchQuery.lowercase().trim()
+        filteredAnimals = filteredAnimals.filter { animal ->
+            animal.name.lowercase().contains(query) ||
+                    animal.species.lowercase().contains(query) ||
+                    animal.location.lowercase().contains(query)
+        }
+    }
+
+    val groupedAnimals = filteredAnimals.groupBy { it.location }
 
     Scaffold(
         containerColor = Color.White,
@@ -72,34 +67,56 @@ fun HomeScreen() {
             )
         }
     ) { paddingValues ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item(span = { GridItemSpan(3) }) {
-                Spacer(modifier = Modifier.height(8.dp))
-
-                SectorDropdown(
-                    sectors = availableSectors,
-                    selectedSector = selectedSector,
-                    onSectorSelected = { newSector -> selectedSector = newSector }
-                )
-            }
-
-            groupedAnimals.forEach { (sectorName, animalsInSector) ->
-
-                item(span = { GridItemSpan(3) }) {
-                    SectionHeader(title = sectorName)
+            when {
+                uiState.isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = AnimonDarkGreen
+                    )
                 }
+                uiState.errorMessage != null -> {
+                    Text(
+                        text = uiState.errorMessage ?: "Nieznany błąd",
+                        color = Color.Red,
+                        modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                    )
+                }
+                else -> {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
 
-                items(animalsInSector.size) { index ->
-                    val animal = animalsInSector[index]
-                    AnimalCard(name = animal.name, hasImage = animal.hasImage)
+                        item(span = { GridItemSpan(3) }) {
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            SectorDropdown(
+                                sectors = availableSectors,
+                                selectedSector = uiState.selectedSector,
+                                onSectorSelected = { newSector -> viewModel.onSectorSelected(newSector) }
+                            )
+                        }
+
+                        groupedAnimals.forEach { (sectorName, animalsInSector) ->
+                            item(span = { GridItemSpan(3) }) {
+                                SectionHeader(title = sectorName)
+                            }
+
+                            items(animalsInSector.size) { index ->
+                                val animal = animalsInSector[index]
+                                AnimalCard(name = animal.name, hasImage = animal.hasImage)
+                            }
+                        }
+                    }
                 }
             }
         }
