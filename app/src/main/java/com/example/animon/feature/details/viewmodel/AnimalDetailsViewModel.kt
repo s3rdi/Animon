@@ -103,25 +103,6 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
         }
     }
 
-    private fun checkUserRole() {
-        val currentUserId = auth.currentUser?.uid ?: return
-
-        db.collection("users").document(currentUserId)
-            .get()
-            .addOnSuccessListener { document ->
-                if (document != null && document.exists()) {
-                    val role = document.getString("position")
-                    val firstName = document.getString("firstName")
-                    val secondName = document.getString("secondName")
-
-                    if (role == "Weterynarz") {
-                        _isVeterinarian.value = true
-                        _currentVetName.value = "lek. wet. $firstName $secondName"
-                    }
-                }
-            }
-    }
-
     private fun loadAnimalDetails(animalId: String) {
         db.collection("animals").document(animalId)
             .addSnapshotListener { snapshot, error ->
@@ -225,7 +206,7 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
             "title" to title,
             "description" to description,
             "date" to date,
-            "vetId" to "users/$currentUserId",
+            "vetId" to currentUserId,
             "vetName" to _currentVetName.value
         )
 
@@ -233,5 +214,54 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
             .document(id)
             .collection("medical_records")
             .add(newRecord)
+    }
+
+    fun deleteMedicalRecord(recordId: String) {
+        val id = animalId ?: return
+
+        db.collection("animals")
+            .document(id)
+            .collection("medical_records")
+            .document(recordId)
+            .delete()
+    }
+
+    fun updateMedicalRecord(recordId: String, updatedTitle: String, updatedDescription: String) {
+        val id = animalId ?: return
+
+        db.collection("animals")
+            .document(id)
+            .collection("medical_records")
+            .document(recordId)
+            .update(
+                mapOf(
+                    "title" to updatedTitle,
+                    "description" to updatedDescription
+                )
+            )
+    }
+
+    private fun checkUserRole() {
+        val currentUserId = auth.currentUser?.uid ?: return
+
+        db.collection("users").document(currentUserId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    val role = document.getString("position")
+                    val firstName = document.getString("first_name")
+                    val secondName = document.getString("second_name")
+
+                    if (role == "Weterynarz") {
+                        _isVeterinarian.value = true
+                        _currentVetName.value = "lek. wet. $firstName $secondName"
+                    }
+                }
+            }
+    }
+
+    fun isCurrentUserAuthor(vetId: String): Boolean {
+        val currentUserId = auth.currentUser?.uid ?: return false
+        return currentUserId == vetId
     }
 }

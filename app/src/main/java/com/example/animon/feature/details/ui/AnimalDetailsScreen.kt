@@ -1,6 +1,7 @@
 package com.example.animon.feature.details.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -25,6 +28,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AssignmentInd
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LocationOn
@@ -69,8 +74,11 @@ import com.example.animon.feature.details.viewmodel.PassportSection
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.graphics.Color
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -127,6 +135,7 @@ fun AnimalDetailsScreen(
                     0 -> BasicInfoContent(animal = animalData!!, status = calculatedStatus)
                     1 -> MedicalInfoContent(
                         records = medicalRecords,
+                        viewModel = viewModel,
                         navController = navController,
                         isVet = isVet,
                         onAddNewRecord = { title, desc, date ->
@@ -361,8 +370,9 @@ fun BasicInfoContent(
 @Composable
 fun MedicalInfoContent(
     records: List<MedicalRecord>,
-    navController: NavController,
     isVet: Boolean,
+    viewModel: AnimalDetailsViewModel,
+    navController: NavController,
     onAddNewRecord: (String, String, String) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -404,15 +414,30 @@ fun MedicalInfoContent(
                     textAlign = TextAlign.Center
                 )
             } else {
-                records.forEach { record ->
-                    MedicalInfoTile(
-                        title = record.title,
-                        date = record.date,
-                        description = record.description,
-                        vetId = record.vetId,
-                        vetName = record.vetName,
-                        navController = navController
-                    )
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(
+                        items = records,
+                        key = { record -> record.id }
+                    ) { record ->
+                        val isAuthor = viewModel.isCurrentUserAuthor(record.vetId)
+
+                        MedicalInfoTile(
+                            title = record.title,
+                            date = record.date,
+                            description = record.description,
+                            vetId = record.vetId,
+                            vetName = record.vetName,
+                            isAuthor = isAuthor,
+                            navController = navController,
+                            onDelete = { viewModel.deleteMedicalRecord(record.id) },
+                            onUpdate = { newTitle, newDesc -> viewModel.updateMedicalRecord(record.id, newTitle, newDesc) }
+                        )
+                    }
                 }
             }
         }
@@ -426,9 +451,25 @@ fun MedicalInfoTile(
     description: String,
     vetId: String,
     vetName: String,
+    isAuthor: Boolean,
+    onDelete: () -> Unit,
+    onUpdate: (String, String) -> Unit,
     navController: NavController
 ) {
     var isExpanded by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    if (showEditDialog) {
+        EditMedicalRecordDialog(
+            initialTitle = title,
+            initialDescription = description,
+            onDismiss = { showEditDialog = false },
+            onConfirm = { updatedTitle, updatedDesc ->
+                onUpdate(updatedTitle, updatedDesc)
+                showEditDialog = false
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -491,6 +532,74 @@ fun MedicalInfoTile(
                     lineHeight = 20.sp
                 )
 
+                if (isAuthor) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedButton(
+                            onClick = { showEditDialog = true },
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = AnimonTileBeige.copy(alpha = 0.5f)
+                            ),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = AnimonTileBeige
+                            ),
+                            contentPadding = PaddingValues(
+                                horizontal = 14.dp,
+                                vertical = 6.dp
+                            ),
+                            modifier = Modifier.height(34.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edytuj",
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Edytuj",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = { onDelete() },
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = Color(0xFFE57373).copy(alpha = 0.6f)
+                            ),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFFE57373)
+                            ),
+                            contentPadding = PaddingValues(
+                                horizontal = 14.dp,
+                                vertical = 6.dp
+                            ),
+                            modifier = Modifier.height(34.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Usuń",
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Usuń",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+
                 if (vetName.isNotEmpty() && vetId.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -501,14 +610,7 @@ fun MedicalInfoTile(
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .clickable {
-                                val cleanVetId = vetId
-                                    .removePrefix("/")
-                                    .removePrefix("users/")
-                                    .trim()
-
-                                if (cleanVetId.isNotEmpty()) {
-                                    navController.navigate("profile/$cleanVetId")
-                                }
+                                navController.navigate("profile/$vetId")
                             }
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -533,6 +635,107 @@ fun MedicalInfoTile(
             }
         }
     }
+}
+
+@Composable
+fun AddMedicalRecordDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (title: String, description: String, date: String) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+
+    val currentDate = remember {
+        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date())
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Dodaj wpis medyczny", fontWeight = FontWeight.Bold, color = AnimonGreen) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Tytuł wpisu") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Opis dolegliwości / zalecenia") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+                OutlinedTextField(
+                    value = currentDate,
+                    onValueChange = {  },
+                    label = { Text("Data") },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = false
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { if (title.isNotBlank()) onConfirm(title, description, currentDate) },
+                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen)
+            ) {
+                Text("Zapisz", color = AnimonBeige)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Anuluj", color = AnimonGreen)
+            }
+        }
+    )
+}
+
+@Composable
+fun EditMedicalRecordDialog(
+    initialTitle: String,
+    initialDescription: String,
+    onDismiss: () -> Unit,
+    onConfirm: (title: String, description: String) -> Unit
+) {
+    var title by remember { mutableStateOf(initialTitle) }
+    var description by remember { mutableStateOf(initialDescription) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Edytuj wpis medyczny", fontWeight = FontWeight.Bold, color = AnimonGreen) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Tytuł wpisu") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Opis dolegliwości / zalecenia") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { if (title.isNotBlank()) onConfirm(title, description) },
+                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen)
+            ) {
+                Text("Zapisz zmiany", color = AnimonBeige)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Anuluj", color = AnimonGreen)
+            }
+        }
+    )
 }
 
 @Composable
@@ -658,59 +861,4 @@ fun PassportContent(sections: List<PassportSection>) {
 
         Spacer(modifier = Modifier.height(16.dp))
     }
-}
-
-@Composable
-fun AddMedicalRecordDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (title: String, description: String, date: String) -> Unit
-) {
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-
-    val currentDate = remember {
-        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date())
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = "Dodaj wpis medyczny", fontWeight = FontWeight.Bold, color = AnimonGreen) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Tytuł wpisu") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Opis dolegliwości / zalecenia") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
-                )
-                OutlinedTextField(
-                    value = currentDate,
-                    onValueChange = {  },
-                    label = { Text("Data") },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = false
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { if (title.isNotBlank()) onConfirm(title, description, currentDate) },
-                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen)
-            ) {
-                Text("Zapisz", color = AnimonBeige)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Anuluj", color = AnimonGreen)
-            }
-        }
-    )
 }

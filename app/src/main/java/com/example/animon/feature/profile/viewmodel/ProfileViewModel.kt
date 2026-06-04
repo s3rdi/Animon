@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 data class UserProfileData(
-    val firstName: String = "",
-    val secondName: String = "",
+    val first_name: String = "",
+    val second_name: String = "",
     val email: String = "",
     val position: String = "",
     val sector: String = "",

@@ -78,7 +78,7 @@ fun ProfileScreen(
             val user = profileData!!
 
             Text(
-                text = "${user.firstName} ${user.secondName}",
+                text = "${user.first_name} ${user.second_name}",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
