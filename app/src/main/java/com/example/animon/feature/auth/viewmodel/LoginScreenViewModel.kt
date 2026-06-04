@@ -58,7 +58,7 @@ class LoginScreenViewModel : ViewModel() {
                         it.copy(
                             isLoading = false,
                             isLoginSuccessful = false,
-                            errorMessage = "Podano niepoprawny email lub hasło"
+                            errorMessage = "Podano niepoprawny email lub hasło!"
                         )
                     }
                 }
