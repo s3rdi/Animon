@@ -1,11 +1,15 @@
 package com.example.animon.feature.auth.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class LoginUiState(
     val email: String = "",
@@ -21,6 +25,9 @@ class LoginScreenViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
+    private val _loginEvent = MutableSharedFlow<Boolean>()
+    val loginEvent = _loginEvent.asSharedFlow()
 
     fun onEmailChange(newEmail: String) {
         _uiState.update { it.copy(email = newEmail, errorMessage = null) }
@@ -45,6 +52,7 @@ class LoginScreenViewModel : ViewModel() {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     _uiState.update { it.copy(isLoading = false, isLoginSuccessful = true) }
+                    viewModelScope.launch { _loginEvent.emit(true) }
                 } else {
                     _uiState.update {
                         it.copy(
