@@ -36,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.animon.feature.home.ui.HomeScreen
 import com.example.animon.feature.profile.ui.ProfileScreen
 
 class MainActivity : ComponentActivity() {
@@ -93,7 +94,13 @@ fun MainAppContainer(rootNavController: NavHostController) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    IconButton(onClick = {  }) {
+                    IconButton(onClick = {
+                        internalNavController.navigate("home") {
+                            popUpTo(internalNavController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Pets,
                             contentDescription = "Lista zwierząt",
@@ -136,9 +143,13 @@ fun MainAppContainer(rootNavController: NavHostController) {
     ) { innerPadding ->
         NavHost(
             navController = internalNavController,
-            startDestination = "details/JMHaTQdwSQmU3YFsFc5z",
+            startDestination = "home",
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable(route = "home") {
+                HomeScreen()
+            }
+
             composable(route = "details/{animalId}",
                 arguments = listOf(
                     navArgument("animalId") { type = NavType.StringType }
