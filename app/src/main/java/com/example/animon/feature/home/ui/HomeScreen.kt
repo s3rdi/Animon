@@ -1,6 +1,7 @@
 package com.example.animon.feature.home.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -16,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,7 +29,8 @@ import com.example.animon.feature.home.viewmodel.HomeViewModel
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = viewModel(),
+    onAnimalClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -113,7 +116,11 @@ fun HomeScreen(
 
                             items(animalsInSector.size) { index ->
                                 val animal = animalsInSector[index]
-                                AnimalCard(name = animal.name, hasImage = animal.hasImage)
+                                AnimalCard(
+                                    name = animal.name,
+                                    hasImage = animal.hasImage,
+                                    onClick = { onAnimalClick(animal.id) }
+                                    )
                             }
                         }
                     }
@@ -261,11 +268,13 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun AnimalCard(name: String, hasImage: Boolean) {
+fun AnimalCard(name: String, hasImage: Boolean, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .aspectRatio(1f)
-            .background(Color(0xFFF2F2F2), RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFFF2F2F2))
+            .clickable { onClick() }
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center

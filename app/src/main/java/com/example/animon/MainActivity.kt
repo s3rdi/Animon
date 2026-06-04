@@ -138,7 +138,11 @@ fun MainAppContainer(rootNavController: NavHostController) {
             modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
         ) {
             composable(route = "home") {
-                HomeScreen()
+                HomeScreen(
+                    onAnimalClick = { animalId ->
+                        internalNavController.navigate("details/$animalId")
+                    }
+                )
             }
 
             composable(route = "details/{animalId}",
