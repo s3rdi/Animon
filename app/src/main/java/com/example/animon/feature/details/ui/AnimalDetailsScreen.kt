@@ -78,11 +78,19 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.graphics.Color
+import com.example.animon.core.designsystem.AnimonDarkGreen
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnimalDetailsScreen(
     viewModel: AnimalDetailsViewModel = viewModel(),
@@ -99,8 +107,29 @@ fun AnimalDetailsScreen(
 
     val isVet by viewModel.isVeterinarian.collectAsState()
 
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text("Szczegóły", color = AnimonDarkGreen)
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "cofnij",
+                            tint = AnimonDarkGreen
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
+            )
+        }
+    ) { paddingValues ->
     Column(
-        modifier = Modifier
+        modifier = Modifier.padding(paddingValues)
             .fillMaxWidth()
             .padding(top = 32.dp, start = 16.dp, end = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -135,9 +164,10 @@ fun AnimalDetailsScreen(
                     0 -> BasicInfoContent(
                         animal = animalData!!,
                         status = calculatedStatus,
-                        onUpdate = {
-                            updatedAnimal -> viewModel.updateAnimalDocument(updatedAnimal)
+                        onUpdate = { updatedAnimal ->
+                            viewModel.updateAnimalDocument(updatedAnimal)
                         })
+
                     1 -> MedicalInfoContent(
                         records = medicalRecords,
                         viewModel = viewModel,
@@ -147,9 +177,11 @@ fun AnimalDetailsScreen(
                             viewModel.addMedicalRecord(title, desc, date)
                         }
                     )
+
                     2 -> PassportContent(sections = passportSections)
                 }
             }
+        }
         }
     }
 }
