@@ -319,7 +319,7 @@ fun InfoTile(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = value,
+            text = if (value == "") "-" else value,
             fontSize = 18.sp,
             color = AnimonTileBeige,
             fontWeight = FontWeight.Bold
