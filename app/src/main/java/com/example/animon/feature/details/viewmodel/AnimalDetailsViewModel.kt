@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 enum class AnimalStatus(val label: String, val icon: ImageVector, val color: Color) {
     GOOD("Dobry", Icons.Default.CheckCircle, Color(0xFF4CAF50)),
@@ -122,9 +124,14 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
                 if (snapshot != null) {
+                    val format = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+
                     val records = snapshot.documents.mapNotNull { doc ->
                         doc.toObject(MedicalRecord::class.java)?.copy(id = doc.id)
+                    }.sortedByDescending { record ->
+                        try { format.parse(record.date) } catch (e: Exception) { null }
                     }
+
                     _medicalRecordsState.value = records
                 }
             }
