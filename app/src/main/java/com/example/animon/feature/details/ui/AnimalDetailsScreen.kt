@@ -129,60 +129,60 @@ fun AnimalDetailsScreen(
             )
         }
     ) { paddingValues ->
-    Column(
-        modifier = Modifier.padding(paddingValues)
-            .fillMaxWidth()
-            .padding(top = 32.dp, start = 16.dp, end = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        AnimalImage(animalData?.photo ?: "")
-
-        AnimalHeader(
-            name = animalData?.name ?: "Ładowanie...",
-            location = animalData?.location ?: "..."
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        AnimalTabsBar(
-            tabs = tabs,
-            selectedTabIndex = selectedTabIndex,
-            onTabSelected = { newIndex -> selectedTabIndex = newIndex }
-        )
-
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 16.dp)
+        Column(
+            modifier = Modifier.padding(paddingValues)
+                .fillMaxWidth()
+                .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (animalData == null) {
-                Text(
-                    text = "Pobieranie danych z bazy...",
-                    modifier = Modifier.align(Alignment.Center),
-                    color = AnimonGreen
-                )
-            } else {
-                when (selectedTabIndex) {
-                    0 -> BasicInfoContent(
-                        animal = animalData!!,
-                        status = calculatedStatus,
-                        onUpdate = { updatedAnimal ->
-                            viewModel.updateAnimalDocument(updatedAnimal)
-                        })
+            AnimalImage(animalData?.photo ?: "")
 
-                    1 -> MedicalInfoContent(
-                        records = medicalRecords,
-                        viewModel = viewModel,
-                        navController = navController,
-                        isVet = isVet,
-                        onAddNewRecord = { title, desc, date ->
-                            viewModel.addMedicalRecord(title, desc, date)
-                        }
+            AnimalHeader(
+                name = animalData?.name ?: "Ładowanie...",
+                location = animalData?.location ?: "..."
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            AnimalTabsBar(
+                tabs = tabs,
+                selectedTabIndex = selectedTabIndex,
+                onTabSelected = { newIndex -> selectedTabIndex = newIndex }
+            )
+
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+            ) {
+                if (animalData == null) {
+                    Text(
+                        text = "Pobieranie danych z bazy...",
+                        modifier = Modifier.align(Alignment.Center),
+                        color = AnimonGreen
                     )
+                } else {
+                    when (selectedTabIndex) {
+                        0 -> BasicInfoContent(
+                            animal = animalData!!,
+                            status = calculatedStatus,
+                            onUpdate = { updatedAnimal ->
+                                viewModel.updateAnimalDocument(updatedAnimal)
+                            })
 
-                    2 -> PassportContent(sections = passportSections)
+                        1 -> MedicalInfoContent(
+                            records = medicalRecords,
+                            viewModel = viewModel,
+                            navController = navController,
+                            isVet = isVet,
+                            onAddNewRecord = { title, desc, date ->
+                                viewModel.addMedicalRecord(title, desc, date)
+                            }
+                        )
+
+                        2 -> PassportContent(sections = passportSections)
+                    }
                 }
             }
-        }
         }
     }
 }
@@ -414,7 +414,7 @@ fun BasicInfoContent(
         columns = GridCells.Fixed(2),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxWidth()
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             StatusInfoTile(
@@ -545,7 +545,9 @@ fun MedicalInfoContent(
         )
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
         if (isVet) {
             Button(
                 onClick = { showDialog = true },
@@ -559,46 +561,40 @@ fun MedicalInfoContent(
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            if (records.isEmpty()) {
-                Text(
-                    text = "Brak wpisów medycznych dla tego zwierzęcia.",
-                    modifier = Modifier.padding(16.dp),
-                    textAlign = TextAlign.Center
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(
-                        items = records,
-                        key = { record -> record.id }
-                    ) { record ->
-                        val isAuthor = viewModel.isCurrentUserAuthor(record.vetId)
+        if (records.isEmpty()) {
+            Text(
+                text = "Brak wpisów medycznych dla tego zwierzęcia.",
+                modifier = Modifier.padding(16.dp),
+                textAlign = TextAlign.Center
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(
+                    items = records,
+                    key = { record -> record.id }
+                ) { record ->
+                    val isAuthor = viewModel.isCurrentUserAuthor(record.vetId)
 
-                        MedicalInfoTile(
-                            title = record.title,
-                            date = record.date,
-                            description = record.description,
-                            vetId = record.vetId,
-                            vetName = record.vetName,
-                            isAuthor = isAuthor,
-                            navController = navController,
-                            onDelete = { viewModel.deleteMedicalRecord(record.id) },
-                            onUpdate = { newTitle, newDesc -> viewModel.updateMedicalRecord(record.id, newTitle, newDesc) }
-                        )
-                    }
+                    MedicalInfoTile(
+                        title = record.title,
+                        date = record.date,
+                        description = record.description,
+                        vetId = record.vetId,
+                        vetName = record.vetName,
+                        isAuthor = isAuthor,
+                        navController = navController,
+                        onDelete = { viewModel.deleteMedicalRecord(record.id) },
+                        onUpdate = { newTitle, newDesc -> viewModel.updateMedicalRecord(record.id, newTitle, newDesc) }
+                    )
                 }
             }
         }
+
     }
 }
 
