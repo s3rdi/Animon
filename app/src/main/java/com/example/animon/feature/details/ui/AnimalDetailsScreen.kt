@@ -1,5 +1,6 @@
 package com.example.animon.feature.details.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -61,7 +62,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.animon.R
 import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonGreen
 import com.example.animon.core.designsystem.AnimonTileBeige
@@ -78,13 +78,14 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import com.example.animon.core.designsystem.AnimonDarkGreen
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -116,7 +117,7 @@ fun AnimalDetailsScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "cofnij",
                             tint = AnimonDarkGreen
                         )
@@ -134,7 +135,7 @@ fun AnimalDetailsScreen(
             .padding(top = 32.dp, start = 16.dp, end = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        AnimalImage()
+        AnimalImage(animalData?.photo ?: "")
 
         AnimalHeader(
             name = animalData?.name ?: "Ładowanie...",
@@ -151,7 +152,7 @@ fun AnimalDetailsScreen(
 
         Box(modifier = Modifier
             .fillMaxSize()
-            .padding(vertical = 16.dp)
+            .padding(top = 16.dp)
         ) {
             if (animalData == null) {
                 Text(
@@ -186,8 +187,14 @@ fun AnimalDetailsScreen(
     }
 }
 
+@SuppressLint("LocalContextResourcesRead", "DiscouragedApi")
 @Composable
-fun AnimalImage() {
+fun AnimalImage(imageName: String) {
+    val context = LocalContext.current
+    val imageResId = remember(imageName) {
+        context.resources.getIdentifier(imageName, "drawable", context.packageName)
+    }
+
     Box(
         modifier = Modifier
             .size(106.dp)
@@ -196,14 +203,18 @@ fun AnimalImage() {
             .border(width = 3.dp, color = AnimonGreen, shape = CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.dog),
-            contentDescription = "Zdjęcie zwierzęcia",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(100.dp)
-                .clip(CircleShape)
-        )
+        if (imageResId != 0) {
+            Image(
+                painter = painterResource(id = imageResId),
+                contentDescription = "Zdjęcie zwierzęcia",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+            )
+        } else {
+            Box(modifier = Modifier.size(100.dp).background(Color.Gray))
+        }
     }
 }
 

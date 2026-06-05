@@ -27,6 +27,7 @@ enum class AnimalStatus(val label: String, val icon: ImageVector, val color: Col
 
 data class AnimalData(
     val name: String = "",
+    val photo: String = "",
     val location: String = "",
     val weight: String = "",
     val date_of_birth: String = "",
