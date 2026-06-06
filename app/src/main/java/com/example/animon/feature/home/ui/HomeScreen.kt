@@ -1,6 +1,8 @@
 package com.example.animon.feature.home.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -19,6 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -118,7 +123,7 @@ fun HomeScreen(
                                 val animal = animalsInSector[index]
                                 AnimalCard(
                                     name = animal.name,
-                                    hasImage = animal.hasImage,
+                                    photo = animal.photo,
                                     onClick = { onAnimalClick(animal.id) }
                                     )
                             }
@@ -268,7 +273,11 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun AnimalCard(name: String, hasImage: Boolean, onClick: () -> Unit) {
+fun AnimalCard(name: String, photo: String, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val imageResId = remember(photo) {
+        context.resources.getIdentifier(photo, "drawable", context.packageName)
+    }
     Column(
         modifier = Modifier
             .aspectRatio(1f)
@@ -279,19 +288,27 @@ fun AnimalCard(name: String, hasImage: Boolean, onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (hasImage) {
+        if (photo.isNotEmpty() && imageResId != 0) {
+            Image(
+                painter = painterResource(id = imageResId),
+                contentDescription = "Zdjęcie zwierzęcia $name",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(48.dp)
+                    .border(2.dp, AnimonDarkGreen, CircleShape)
+                    .clip(CircleShape)
+            )
+        } else {
             Box(
                 modifier = Modifier
                     .size(48.dp)
+                    .border(2.dp, AnimonDarkGreen, CircleShape)
                     .background(Color.Black, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Default.Pets, contentDescription = null, tint = Color.White)
             }
-        } else {
-            Spacer(modifier = Modifier.size(48.dp))
         }
-
         Spacer(modifier = Modifier.height(8.dp))
 
         if (name.isNotEmpty()) {

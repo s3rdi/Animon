@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.update
 data class Animal(
     val id: String = "",
     val name: String = "",
+    val photo: String = "",
     val location: String = "",
     val hasImage: Boolean = false,
     val species: String = ""
