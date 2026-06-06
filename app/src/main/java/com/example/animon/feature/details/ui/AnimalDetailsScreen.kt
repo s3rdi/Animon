@@ -145,7 +145,11 @@ fun AnimalDetailsScreen(
                             }
                         )
 
-                        2 -> PassportContent(sections = passportSections)
+                        2 -> PassportContent(
+                            sections = passportSections,
+                            isVet = isVet,
+                            viewModel = viewModel
+                        )
                     }
                 }
             }

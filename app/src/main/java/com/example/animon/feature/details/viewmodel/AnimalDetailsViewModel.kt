@@ -257,6 +257,72 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
             .set(updatedAnimalData)
     }
 
+    fun addPassportSection(title: String, subtitle: String) {
+        val id = animalId ?: return
+
+        // Ustalamy kolejność na podstawie aktualnej liczby sekcji (opcjonalnie)
+        val nextOrder = _passportState.value.size + 1
+
+        val newSection = hashMapOf(
+            "title" to title,
+            "subtitle" to subtitle,
+            "order" to nextOrder,
+            "items" to emptyMap<String, String>()
+        )
+
+        db.collection("animals")
+            .document(id)
+            .collection("passport")
+            .add(newSection)
+    }
+
+    fun updatePassportSection(sectionId: String, updatedTitle: String, updatedSubtitle: String) {
+        val id = animalId ?: return
+
+        db.collection("animals")
+            .document(id)
+            .collection("passport")
+            .document(sectionId)
+            .update(
+                mapOf(
+                    "title" to updatedTitle,
+                    "subtitle" to updatedSubtitle
+                )
+            )
+    }
+
+    fun putPassportItem(sectionId: String, label: String, value: String) {
+        val id = animalId ?: return
+
+        db.collection("animals")
+            .document(id)
+            .collection("passport")
+            .document(sectionId)
+            .update("items.$label", value)
+    }
+
+    fun deletePassportSection(sectionId: String) {
+        val id = animalId ?: return
+
+        db.collection("animals")
+            .document(id)
+            .collection("passport")
+            .document(sectionId)
+            .delete()
+    }
+
+    fun deletePassportItem(sectionId: String, label: String) {
+        val id = animalId ?: return
+        val updates = hashMapOf<String, Any>(
+            "items.$label" to com.google.firebase.firestore.FieldValue.delete()
+        )
+        db.collection("animals")
+            .document(id)
+            .collection("passport")
+            .document(sectionId)
+            .update(updates)
+    }
+
     private fun checkUserRole() {
         val currentUserId = auth.currentUser?.uid ?: return
 
