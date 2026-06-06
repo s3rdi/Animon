@@ -53,6 +53,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.example.animon.core.designsystem.AnimonDarkGreen
+import com.example.animon.core.designsystem.AnimonTileBeige
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,19 +76,20 @@ fun AnimalDetailsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Szczegóły", color = AnimonDarkGreen)
+                    Text("Szczegóły")
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "cofnij",
-                            tint = AnimonDarkGreen
+                            tint = Color.White
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
+                    containerColor = AnimonGreen,
+                    titleContentColor = Color.White
                 )
             )
         }
