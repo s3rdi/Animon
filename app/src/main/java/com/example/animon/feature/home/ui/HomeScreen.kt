@@ -1,5 +1,6 @@
 package com.example.animon.feature.home.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -128,6 +129,7 @@ fun HomeScreen(
                                 AnimalCard(
                                     name = animal.name,
                                     photo = animal.photo,
+                                    statusColor = animal.status.color,
                                     onClick = { onAnimalClick(animal.id) }
                                     )
                             }
@@ -277,7 +279,7 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun AnimalCard(name: String, photo: String, onClick: () -> Unit) {
+fun AnimalCard(name: String, photo: String, statusColor: Color, onClick: () -> Unit) {
     val context = LocalContext.current
     val imageResId = remember(photo) {
         context.resources.getIdentifier(photo, "drawable", context.packageName)
@@ -292,26 +294,36 @@ fun AnimalCard(name: String, photo: String, onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (photo.isNotEmpty() && imageResId != 0) {
-            Image(
-                painter = painterResource(id = imageResId),
-                contentDescription = "Zdjęcie zwierzęcia $name",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(48.dp)
-                    .border(2.dp, AnimonDarkGreen, CircleShape)
-                    .clip(CircleShape)
-            )
-        } else {
+        Box(contentAlignment = Alignment.TopEnd) {
+            if (photo.isNotEmpty() && imageResId != 0) {
+                Image(
+                    painter = painterResource(id = imageResId),
+                    contentDescription = "Zdjęcie zwierzęcia $name",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .border(2.dp, AnimonDarkGreen, CircleShape)
+                        .clip(CircleShape)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .border(2.dp, AnimonDarkGreen, CircleShape)
+                        .background(Color.Black, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Pets, contentDescription = null, tint = Color.White)
+                }
+            }
+
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .border(2.dp, AnimonDarkGreen, CircleShape)
-                    .background(Color.Black, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.Pets, contentDescription = null, tint = Color.White)
-            }
+                    .size(14.dp)
+                    .offset(x = 2.dp, y = (-2).dp)
+                    .background(statusColor, CircleShape)
+                    .border(2.dp, Color(0xFFF2F2F2), CircleShape)
+            )
         }
         Spacer(modifier = Modifier.height(8.dp))
 
