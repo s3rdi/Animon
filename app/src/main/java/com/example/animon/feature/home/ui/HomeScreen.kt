@@ -42,7 +42,11 @@ fun HomeScreen(
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
-    val availableSectors = listOf("Terrarium", "Afrykarium", "Ptaszarnia", "Akwarium", "Wybieg Północny")
+    val availableSectors = uiState.animals
+        .map { it.location }
+        .filter { it.isNotBlank() }
+        .distinct()
+        .sorted()
 
     var filteredAnimals = if (uiState.selectedSector == null) {
         uiState.animals
