@@ -45,6 +45,7 @@ import androidx.navigation.NavController
 import com.example.animon.core.designsystem.AnimonGreen
 import com.example.animon.feature.details.viewmodel.AnimalDetailsViewModel
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -183,7 +184,18 @@ fun AnimalImage(imageName: String) {
                     .clip(CircleShape)
             )
         } else {
-            Box(modifier = Modifier.size(100.dp).background(Color.Gray))
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .background(Color.Black, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Pets,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(70.dp)
+                )
+            }
         }
     }
 }
