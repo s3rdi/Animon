@@ -144,4 +144,14 @@ class HomeViewModel : ViewModel() {
             currentState.copy(selectedSector = sector)
         }
     }
+
+    fun addAnimal(name: String, species: String, location: String) {
+        val newAnimal = Animal(
+            name = name.trim(),
+            species = species.trim(),
+            location = location.trim()
+        )
+
+        db.collection("animals").add(newAnimal)
+    }
 }

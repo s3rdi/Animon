@@ -58,6 +58,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.0")) // lub nowsza
     implementation("com.google.firebase:firebase-firestore")
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.foundation.layout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

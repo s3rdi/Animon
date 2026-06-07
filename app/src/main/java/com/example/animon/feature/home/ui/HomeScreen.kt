@@ -6,12 +6,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Pets
@@ -22,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -42,6 +45,7 @@ fun HomeScreen(
 
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var showAddAnimalDialog by remember { mutableStateOf(false) }
 
     val availableSectors = uiState.animals
         .map { it.location }
@@ -137,7 +141,38 @@ fun HomeScreen(
                     }
                 }
             }
+            FloatingActionButton(
+                onClick = { showAddAnimalDialog = true },
+                containerColor = AnimonDarkGreen,
+                contentColor = Color.White,
+                shape = CircleShape,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd) // Wyrównanie do prawego dolnego rogu
+                    .padding(end = 16.dp, bottom = 4.dp) // Zmniejszony dolny margines, przesuwa przycisk w dół
+                    .size(64.dp) // Ręcznie ustawiony rozmiar (większy niż standard, mniejszy niż Large)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Dodaj zwierzę",
+                    modifier = Modifier
+                        .size(32.dp) // Duża ikona...
+                        .graphicsLayer { // ...sztucznie pogrubiona na osiach X i Y
+                            scaleX = 1.3f
+                            scaleY = 1.3f
+                        }
+                )
+            }
         }
+    }
+
+    if (showAddAnimalDialog) {
+        AddAnimalDialog(
+            onDismiss = { showAddAnimalDialog = false },
+            onConfirm = { name, species, location ->
+                viewModel.addAnimal(name, species, location)
+                showAddAnimalDialog = false
+            }
+        )
     }
 }
 
@@ -336,4 +371,61 @@ fun AnimalCard(name: String, photo: String, statusColor: Color, onClick: () -> U
             )
         }
     }
+}
+
+@Composable
+fun AddAnimalDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, species: String, location: String) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var species by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Dodaj nowe zwierzę", color = AnimonDarkGreen, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Imię zwierzaka (np. Simba)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = species,
+                    onValueChange = { species = it },
+                    label = { Text("Gatunek (np. Lew)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = { location = it },
+                    label = { Text("Wybieg (np. Afrykarium)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(name, species, location) },
+                colors = ButtonDefaults.buttonColors(containerColor = AnimonDarkGreen),
+                enabled = name.isNotBlank() && species.isNotBlank() && location.isNotBlank()
+            ) {
+                Text("Zapisz", color = Color.White)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Anuluj", color = Color.Gray)
+            }
+        },
+        containerColor = Color.White
+    )
 }
