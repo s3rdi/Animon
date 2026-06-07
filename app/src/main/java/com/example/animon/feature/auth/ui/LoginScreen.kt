@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -50,9 +51,9 @@ fun LoginScreen(
 
     LaunchedEffect(Unit) {
         isLogoVisible = true
-        delay(300)
+        delay(200)
         isTitleVisible = true
-        delay(300)
+        delay(200)
         isFormVisible = true
     }
 
@@ -66,17 +67,14 @@ fun LoginScreen(
     ) {
         AnimatedVisibility(
             visible = isLogoVisible,
-            enter = scaleIn(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
-            ) + fadeIn(animationSpec = tween(500))
+            enter = slideInVertically(initialOffsetY = { 30 }, animationSpec = tween(500)) +
+                    fadeIn(animationSpec = tween(500))
         ) {
             Box(
                 modifier = Modifier
                     .size(150.dp)
-                    .background(AnimonBeige, shape = CircleShape),
+                    .clip(CircleShape)
+                    .background(AnimonBeige),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -92,9 +90,9 @@ fun LoginScreen(
         AnimatedVisibility(
             visible = isTitleVisible,
             enter = slideInVertically(
-                initialOffsetY = { 50 },
-                animationSpec = tween(700)
-            ) + fadeIn(animationSpec = tween(700))
+                initialOffsetY = { 30 },
+                animationSpec = tween(500)
+            ) + fadeIn(animationSpec = tween(500))
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
