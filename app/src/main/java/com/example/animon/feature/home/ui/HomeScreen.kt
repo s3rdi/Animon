@@ -147,16 +147,16 @@ fun HomeScreen(
                 contentColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier
-                    .align(Alignment.BottomEnd) // Wyrównanie do prawego dolnego rogu
-                    .padding(end = 16.dp, bottom = 4.dp) // Zmniejszony dolny margines, przesuwa przycisk w dół
-                    .size(64.dp) // Ręcznie ustawiony rozmiar (większy niż standard, mniejszy niż Large)
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 4.dp)
+                    .size(64.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Dodaj zwierzę",
                     modifier = Modifier
-                        .size(32.dp) // Duża ikona...
-                        .graphicsLayer { // ...sztucznie pogrubiona na osiach X i Y
+                        .size(32.dp)
+                        .graphicsLayer {
                             scaleX = 1.3f
                             scaleY = 1.3f
                         }
