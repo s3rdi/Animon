@@ -1,5 +1,6 @@
 package com.example.animon.feature.details.viewmodel
 
+import android.app.Application
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.CheckCircle
@@ -7,11 +8,13 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -40,7 +43,8 @@ data class AnimalData(
     val temperature: String = "",
     val pulse: String = "",
     val appetite: String = "",
-    val rabies_vaccination: String = ""
+    val rabies_vaccination: String = "",
+    val calculated_status: String = ""
 )
 
 data class AnimalNorms(
@@ -68,7 +72,10 @@ data class PassportSection(
     val order: String = "",
     val items: Map<String, String> = emptyMap()
 )
-class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() {
+class AnimalDetailsViewModel (
+    private val application: Application,
+    savedStateHandle: SavedStateHandle
+) : AndroidViewModel(application) {
     private val db = FirebaseFirestore.getInstance()
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
@@ -118,6 +125,10 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
                     data?.species?.let { speciesName ->
                         loadAnimalNorms(speciesName.lowercase().trim())
                     }
+
+                    data?.let { animalData ->
+                        checkForStatusChangeAndNotify(animalData)
+                    }
                 }
             }
 
@@ -157,6 +168,10 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
                 if (document != null && document.exists()) {
                     val norms = document.toObject(AnimalNorms::class.java)
                     _normsState.value = norms
+
+                    _animalState.value?.let { animalData ->
+                        checkForStatusChangeAndNotify(animalData)
+                    }
                 }
             }
     }
@@ -204,6 +219,57 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
             penaltyPoints >= 1 -> AnimalStatus.CRITICAL
             penaltyPoints >= 0.2 -> AnimalStatus.WARNING
             else -> AnimalStatus.GOOD
+        }
+    }
+
+    private fun checkForStatusChangeAndNotify(updatedData: AnimalData) {
+        val aId = animalId ?: return
+        val currentNorms = _normsState.value ?: return
+
+        val newStatus = calculateHeuristicStatus(updatedData, currentNorms)
+        val oldStatusString = updatedData.calculated_status // Sprawdzamy status z przekazanego obiektu
+
+        val oldStatus = try {
+            AnimalStatus.valueOf(oldStatusString)
+        } catch (_: Exception) {
+            AnimalStatus.UNKNOWN
+        }
+
+        if (newStatus != oldStatus && newStatus != AnimalStatus.UNKNOWN) {
+            db.collection("animals").document(aId)
+                .update("calculated_status", newStatus.name)
+                .addOnSuccessListener {
+                    createInAppNotifications(newStatus)
+                }
+        }
+    }
+
+    private fun createInAppNotifications(status: AnimalStatus) {
+        val animal = _animalState.value ?: return
+        val aId = animalId ?: return
+
+        db.collection("users").get().addOnSuccessListener { snapshot ->
+            val batch = db.batch()
+
+            for (document in snapshot.documents) {
+                val targetUserId = document.id
+
+                val notificationDocRef = db.collection("notifications")
+                    .document("${targetUserId}_${aId}_${status.name}")
+
+                val notificationData = hashMapOf(
+                    "userId" to targetUserId,
+                    "animalId" to aId,
+                    "title" to "Aktualizacja stanu: ${animal.name}",
+                    "message" to "Heurystyka wykazuje status: ${status.label}",
+                    "timestamp" to FieldValue.serverTimestamp(),
+                    "status" to status.name
+                )
+
+                batch.set(notificationDocRef, notificationData, SetOptions.merge())
+            }
+
+            batch.commit()
         }
     }
 
@@ -313,8 +379,9 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
     fun deletePassportItem(sectionId: String, label: String) {
         val id = animalId ?: return
         val updates = hashMapOf<String, Any>(
-            "items.$label" to com.google.firebase.firestore.FieldValue.delete()
+            "items.$label" to FieldValue.delete()
         )
+
         db.collection("animals")
             .document(id)
             .collection("passport")

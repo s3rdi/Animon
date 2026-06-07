@@ -14,17 +14,21 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import com.example.animon.core.designsystem.AnimonBeige
@@ -37,6 +41,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.animon.feature.home.ui.HomeScreen
+import com.example.animon.feature.notifications.ui.NotificationsScreen
+import com.example.animon.feature.notifications.viewmodel.NotificationsViewModel
 import com.example.animon.feature.profile.ui.ProfileScreen
 
 class MainActivity : ComponentActivity() {
@@ -75,6 +81,11 @@ class MainActivity : ComponentActivity() {
 fun MainAppContainer(rootNavController: NavHostController) {
     val internalNavController = rememberNavController()
 
+    val notificationsViewModel: NotificationsViewModel = viewModel()
+
+    val notifications by notificationsViewModel.notifications.collectAsState()
+    val notificationCount = notifications.size
+
     Scaffold(
         bottomBar = {
             BottomAppBar(
@@ -107,12 +118,32 @@ fun MainAppContainer(rootNavController: NavHostController) {
                         )
                     }
 
-                    IconButton(onClick = {  }) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Powiadomienia",
-                            modifier = Modifier.size(30.dp)
-                        )
+                    IconButton(onClick = {
+                            internalNavController.navigate("notifications") {
+                            popUpTo(internalNavController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }) {
+                        BadgedBox(
+                            modifier = Modifier.padding(8.dp),
+                            badge = {
+                                if (notificationCount > 0) {
+                                    Badge(
+                                        containerColor = Color.Red,
+                                        contentColor = Color.White
+                                    ) {
+                                        Text(text = notificationCount.toString())
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Powiadomienia",
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
                     }
 
                     IconButton(onClick = {
@@ -168,6 +199,16 @@ fun MainAppContainer(rootNavController: NavHostController) {
                         popUpTo("main") { inclusive = true }
                     }
                 })
+            }
+
+            composable(route = "notifications") {
+                NotificationsScreen(
+                    viewModel = notificationsViewModel,
+                    navController = internalNavController,
+                    onAnimalClick = { animalId ->
+                        internalNavController.navigate("details/$animalId")
+                    }
+                )
             }
         }
     }
