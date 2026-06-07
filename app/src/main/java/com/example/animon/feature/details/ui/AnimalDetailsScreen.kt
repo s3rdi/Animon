@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,11 +46,15 @@ import androidx.navigation.NavController
 import com.example.animon.core.designsystem.AnimonGreen
 import com.example.animon.feature.details.viewmodel.AnimalDetailsViewModel
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.example.animon.core.designsystem.AnimonDarkGreen
@@ -104,7 +109,13 @@ fun AnimalDetailsScreen(
 
             AnimalHeader(
                 name = animalData?.name ?: "Ładowanie...",
-                location = animalData?.location ?: "..."
+                location = animalData?.location ?: "...",
+                onNameChanged = { newName ->
+                    animalData?.let { currentAnimal ->
+                        val updatedAnimal = currentAnimal.copy(name = newName)
+                        viewModel.updateAnimalDocument(updatedAnimal)
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -183,7 +194,18 @@ fun AnimalImage(imageName: String) {
                     .clip(CircleShape)
             )
         } else {
-            Box(modifier = Modifier.size(100.dp).background(Color.Gray))
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .background(Color.Black, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Pets,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(70.dp)
+                )
+            }
         }
     }
 }
@@ -191,18 +213,48 @@ fun AnimalImage(imageName: String) {
 @Composable
 fun AnimalHeader(
     name: String,
-    location: String
+    location: String,
+    onNameChanged: (String) -> Unit
 ) {
-    Text(
-        text = name,
-        fontSize = 20.sp,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onBackground,
-        letterSpacing = 0.5.sp,
-        modifier = Modifier.padding(top = 20.dp)
-    )
+    var isEditing by remember { mutableStateOf(false) }
+    var editableName by remember(name) { mutableStateOf(name) }
 
-    Spacer(modifier = Modifier.size(12.dp))
+    if (isEditing) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(vertical = 20.dp)
+        ) {
+            OutlinedTextField(
+                value = editableName,
+                onValueChange = { editableName = it },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            )
+            IconButton(onClick = {
+                if (editableName.isNotBlank()) {
+                    onNameChanged(editableName)
+                    isEditing = false
+                }
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Zapisz imię",
+                    tint = AnimonGreen
+                )
+            }
+        }
+    } else {
+        Text(
+            text = name,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            letterSpacing = 0.5.sp,
+            modifier = Modifier
+                .padding(vertical = 20.dp)
+                .clickable { isEditing = true }
+        )
+    }
 
     Row(
         modifier = Modifier
