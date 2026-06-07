@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonGreen
 import com.example.animon.core.designsystem.AnimonTileBeige
 import com.example.animon.core.designsystem.AnimonTileGreen
@@ -53,6 +54,117 @@ import com.example.animon.feature.details.viewmodel.PassportSection
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.forEach
+
+@Composable
+fun PassportContent(
+    sections: List<PassportSection>,
+    isVet: Boolean,
+    viewModel: AnimalDetailsViewModel
+) {
+    var isAddSectionDialogOpen by remember { mutableStateOf(false) }
+    var activeSectionForDialog by remember { mutableStateOf<PassportSection?>(null) }
+    var activeSectionForFieldDialog by remember { mutableStateOf<PassportSection?>(null) }
+    var activeFieldForEdit by remember { mutableStateOf<Pair<String, String>?>(null) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        if (isVet) {
+            Button(
+                onClick = { isAddSectionDialogOpen = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(text = "+ Nowa sekcja paszportu", color = AnimonBeige, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        if (sections.isEmpty()) {
+            Text(
+                text = "Brak danych paszportowych dla tego zwierzęcia.",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        } else {
+            sections.forEach { section ->
+                PassportSection(
+                    section = section,
+                    isVet = isVet,
+                    onEditSection = { activeSectionForDialog = section },
+                    onDeleteSection = {
+                        viewModel.deletePassportSection(section.id)
+                    },
+                    onAddItem = {
+                        activeSectionForFieldDialog = section
+                        activeFieldForEdit = null
+                    }
+                ) {
+                    section.items.forEach { (label, value) ->
+                        PassportRowItem(
+                            label = label,
+                            value = value,
+                            isVet = isVet,
+                            onEditClick = {
+                                activeSectionForFieldDialog = section
+                                activeFieldForEdit = Pair(label, value)
+                            },
+                            onDeleteClick = {
+                                viewModel.deletePassportItem(section.id, label)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    if (isAddSectionDialogOpen) {
+        PassportSectionDialog(
+            onDismiss = { isAddSectionDialogOpen = false },
+            onConfirm = { title, subtitle ->
+                viewModel.addPassportSection(title, subtitle)
+                isAddSectionDialogOpen = false
+            }
+        )
+    }
+
+    activeSectionForDialog?.let { section ->
+        PassportSectionDialog(
+            initialTitle = section.title,
+            initialSubtitle = section.subtitle,
+            onDismiss = { activeSectionForDialog = null },
+            onConfirm = { title, subtitle ->
+                viewModel.updatePassportSection(section.id, title, subtitle)
+                activeSectionForDialog = null
+            }
+        )
+    }
+
+    activeSectionForFieldDialog?.let { section ->
+        PassportItemDialog(
+            initialLabel = activeFieldForEdit?.first ?: "",
+            initialValue = activeFieldForEdit?.second ?: "",
+            isEditing = activeFieldForEdit != null,
+            onDismiss = {
+                activeSectionForFieldDialog = null
+                activeFieldForEdit = null
+            },
+            onConfirm = { label, value ->
+                viewModel.putPassportItem(section.id, label, value)
+                activeSectionForFieldDialog = null
+                activeFieldForEdit = null
+            }
+        )
+    }
+}
 
 @Composable
 fun PassportSection(
@@ -68,7 +180,7 @@ fun PassportSection(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(bottom = 4.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = AnimonTileGreen)
     ) {
@@ -207,119 +319,6 @@ fun PassportRowItem(
 }
 
 @Composable
-fun PassportContent(
-    sections: List<PassportSection>,
-    isVet: Boolean,
-    viewModel: AnimalDetailsViewModel
-) {
-    var isAddSectionDialogOpen by remember { mutableStateOf(false) }
-    var activeSectionForDialog by remember { mutableStateOf<PassportSection?>(null) }
-    var activeSectionForFieldDialog by remember { mutableStateOf<PassportSection?>(null) }
-    var activeFieldForEdit by remember { mutableStateOf<Pair<String, String>?>(null) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        if (isVet) {
-            OutlinedButton(
-                onClick = { isAddSectionDialogOpen = true },
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = AnimonGreen),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Nowa sekcja paszportu")
-            }
-        }
-
-        if (sections.isEmpty()) {
-            Text(
-                text = "Brak danych paszportowych dla tego zwierzęcia.",
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                textAlign = TextAlign.Center
-            )
-        } else {
-            sections.forEach { section ->
-                PassportSection(
-                    section = section,
-                    isVet = isVet,
-                    onEditSection = { activeSectionForDialog = section },
-                    onDeleteSection = {
-                        // Kliknięcie od razu wywołuje usunięcie sekcji w ViewModelu
-                        viewModel.deletePassportSection(section.id)
-                    },
-                    onAddItem = {
-                        activeSectionForFieldDialog = section
-                        activeFieldForEdit = null
-                    }
-                ) {
-                    section.items.forEach { (label, value) ->
-                        PassportRowItem(
-                            label = label,
-                            value = value,
-                            isVet = isVet,
-                            onEditClick = {
-                                activeSectionForFieldDialog = section
-                                activeFieldForEdit = Pair(label, value)
-                            },
-                            onDeleteClick = {
-                                // Kliknięcie od razu wywołuje usunięcie pojedynczego pola z mapy
-                                viewModel.deletePassportItem(section.id, label)
-                            }
-                        )
-                    }
-                }
-            }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-
-    // --- FORMULARZE OKIEN DIALOGOWYCH (DODAWANIE / EDYCJA) ---
-
-    if (isAddSectionDialogOpen) {
-        PassportSectionDialog(
-            onDismiss = { isAddSectionDialogOpen = false },
-            onConfirm = { title, subtitle ->
-                viewModel.addPassportSection(title, subtitle)
-                isAddSectionDialogOpen = false
-            }
-        )
-    }
-
-    activeSectionForDialog?.let { section ->
-        PassportSectionDialog(
-            initialTitle = section.title,
-            initialSubtitle = section.subtitle,
-            onDismiss = { activeSectionForDialog = null },
-            onConfirm = { title, subtitle ->
-                viewModel.updatePassportSection(section.id, title, subtitle)
-                activeSectionForDialog = null
-            }
-        )
-    }
-
-    activeSectionForFieldDialog?.let { section ->
-        PassportItemDialog(
-            initialLabel = activeFieldForEdit?.first ?: "",
-            initialValue = activeFieldForEdit?.second ?: "",
-            isEditing = activeFieldForEdit != null,
-            onDismiss = {
-                activeSectionForFieldDialog = null
-                activeFieldForEdit = null
-            },
-            onConfirm = { label, value ->
-                viewModel.putPassportItem(section.id, label, value)
-                activeSectionForFieldDialog = null
-                activeFieldForEdit = null
-            }
-        )
-    }
-}
-
-@Composable
 fun PassportSectionDialog(
     initialTitle: String = "",
     initialSubtitle: String = "",
@@ -378,7 +377,7 @@ fun PassportItemDialog(
                     onValueChange = { label = it },
                     label = { Text("Etykieta") },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !isEditing // Zabezpieczenie przed zmianą klucza mapy przy edycji
+                    enabled = !isEditing
                 )
                 OutlinedTextField(
                     value = value,
