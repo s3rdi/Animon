@@ -65,6 +65,7 @@ data class PassportSection(
     val id: String = "",
     val title: String = "",
     val subtitle: String = "",
+    val order: String = "",
     val items: Map<String, String> = emptyMap()
 )
 class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() {
@@ -129,7 +130,7 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
                     val records = snapshot.documents.mapNotNull { doc ->
                         doc.toObject(MedicalRecord::class.java)?.copy(id = doc.id)
                     }.sortedByDescending { record ->
-                        try { format.parse(record.date) } catch (e: Exception) { null }
+                        try { format.parse(record.date) } catch (_: Exception) { null }
                     }
 
                     _medicalRecordsState.value = records
@@ -137,13 +138,13 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
             }
 
         db.collection("animals").document(animalId).collection("passport")
-            .orderBy("order")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
                 if (snapshot != null) {
                     val records = snapshot.documents.mapNotNull { doc ->
                         doc.toObject(PassportSection::class.java)?.copy(id = doc.id)
-                    }
+                    }.sortedBy { it.order.toIntOrNull() ?: 0 }
+
                     _passportState.value = records
                 }
             }
@@ -259,9 +260,7 @@ class AnimalDetailsViewModel (savedStateHandle: SavedStateHandle) : ViewModel() 
 
     fun addPassportSection(title: String, subtitle: String) {
         val id = animalId ?: return
-
-        // Ustalamy kolejność na podstawie aktualnej liczby sekcji (opcjonalnie)
-        val nextOrder = _passportState.value.size + 1
+        val nextOrder = (_passportState.value.size + 1).toString()
 
         val newSection = hashMapOf(
             "title" to title,
