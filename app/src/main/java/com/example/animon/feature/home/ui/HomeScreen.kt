@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonDarkGreen
+import com.example.animon.core.designsystem.AnimonGreen
 import com.example.animon.feature.home.viewmodel.HomeViewModel
 
 @Composable
@@ -108,11 +109,10 @@ fun HomeScreen(
                         columns = GridCells.Fixed(3),
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 16.dp),
+                            .padding(start = 16.dp, end = 16.dp, top = 24.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-
                         item(span = { GridItemSpan(3) }) {
                             Spacer(modifier = Modifier.height(8.dp))
 
@@ -191,7 +191,7 @@ fun ExpandableTopBar(
                     value = searchQuery,
                     onValueChange = onSearchQueryChange,
                     placeholder = {
-                        Text("Szukaj (nazwa, gatunek, wybieg)...", fontSize = 14.sp)
+                        Text("Szukaj (nazwa, gatunek, wybieg)...", fontSize = 14.sp, color = Color.White.copy(alpha = 0.7f))
                     },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -200,30 +200,32 @@ fun ExpandableTopBar(
                         unfocusedContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = AnimonDarkGreen
+                        cursorColor = Color.White,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
                     )
                 )
             },
             navigationIcon = {
                 IconButton(onClick = { onSearchActiveChange(false) }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Zamknij wyszukiwanie", tint = AnimonDarkGreen)
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Zamknij wyszukiwanie", tint = Color.White)
                 }
             },
             actions = {
                 if (searchQuery.isNotEmpty()) {
                     IconButton(onClick = { onSearchQueryChange("") }) {
-                        Icon(Icons.Default.Close, contentDescription = "Wyczyść", tint = AnimonDarkGreen)
+                        Icon(Icons.Default.Close, contentDescription = "Wyczyść", tint = Color.White)
                     }
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = AnimonGreen)
         )
     } else {
         TopAppBar(
             title = {
                 Text(
                     text = "Lista zwierząt",
-                    color = AnimonDarkGreen,
+                    color = Color.White,
                     fontSize = 22.sp
                 )
             },
@@ -232,11 +234,11 @@ fun ExpandableTopBar(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Szukaj",
-                        tint = AnimonDarkGreen
+                        tint = Color.White
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = AnimonGreen)
         )
     }
 }
