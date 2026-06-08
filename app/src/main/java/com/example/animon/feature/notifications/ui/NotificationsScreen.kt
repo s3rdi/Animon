@@ -43,8 +43,7 @@ import com.example.animon.feature.notifications.viewmodel.NotificationsViewModel
 @Composable
 fun NotificationsScreen(
     viewModel: NotificationsViewModel = viewModel(),
-    navController: NavController,
-    onAnimalClick: (String) -> Unit
+    navController: NavController
 ) {
     val notifications by viewModel.notifications.collectAsState()
 
@@ -97,7 +96,14 @@ fun NotificationsScreen(
                         .fillMaxWidth()
                         .clickable {
                             viewModel.markAsRead(notification.id)
-                            onAnimalClick(notification.animalId)
+
+                            navController.navigate("details/${notification.animalId}") {
+                                popUpTo("notifications") {
+                                    inclusive = true
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                            }
                         },
                     colors = CardDefaults.cardColors(containerColor = backgroundColor)
                 ) {

@@ -222,10 +222,7 @@ fun MainAppContainer(rootNavController: NavHostController) {
                 composable(route = "notifications") {
                     NotificationsScreen(
                         viewModel = notificationsViewModel,
-                        navController = internalNavController,
-                        onAnimalClick = { animalId ->
-                            internalNavController.navigate("details/$animalId")
-                        }
+                        navController = internalNavController
                     )
                 }
             }
