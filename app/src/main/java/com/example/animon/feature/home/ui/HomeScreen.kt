@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -32,13 +34,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonDarkGreen
+import com.example.animon.core.designsystem.AnimonGreen
 import com.example.animon.feature.home.viewmodel.HomeViewModel
 
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
+    navController: NavController,
     onAnimalClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -46,6 +51,15 @@ fun HomeScreen(
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var showAddAnimalDialog by remember { mutableStateOf(false) }
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    val filterSector = savedStateHandle?.get<String>("filter_sector")
+
+    LaunchedEffect(filterSector) {
+        if (filterSector != null) {
+            viewModel.onSectorSelected(filterSector)
+            savedStateHandle.remove<String>("filter_sector")
+        }
+    }
 
     val availableSectors = uiState.animals
         .map { it.location }
@@ -108,11 +122,10 @@ fun HomeScreen(
                         columns = GridCells.Fixed(3),
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 16.dp),
+                            .padding(start = 16.dp, end = 16.dp, top = 24.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-
                         item(span = { GridItemSpan(3) }) {
                             Spacer(modifier = Modifier.height(8.dp))
 
@@ -125,7 +138,7 @@ fun HomeScreen(
 
                         groupedAnimals.forEach { (sectorName, animalsInSector) ->
                             item(span = { GridItemSpan(3) }) {
-                                SectionHeader(title = sectorName)
+                                SectionHeader(title = sectorName, onClick = { viewModel.onSectorSelected(sectorName)})
                             }
 
                             items(animalsInSector.size) { index ->
@@ -168,8 +181,8 @@ fun HomeScreen(
     if (showAddAnimalDialog) {
         AddAnimalDialog(
             onDismiss = { showAddAnimalDialog = false },
-            onConfirm = { name, species, location ->
-                viewModel.addAnimal(name, species, location)
+            onConfirm = { name, species, location, dateOfBirth, gender, size ->
+                viewModel.addAnimal(name, species, location, dateOfBirth, gender, size)
                 showAddAnimalDialog = false
             }
         )
@@ -191,7 +204,7 @@ fun ExpandableTopBar(
                     value = searchQuery,
                     onValueChange = onSearchQueryChange,
                     placeholder = {
-                        Text("Szukaj (nazwa, gatunek, wybieg)...", fontSize = 14.sp)
+                        Text("Szukaj (nazwa, gatunek, wybieg)...", fontSize = 14.sp, color = Color.White.copy(alpha = 0.7f))
                     },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -200,30 +213,32 @@ fun ExpandableTopBar(
                         unfocusedContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = AnimonDarkGreen
+                        cursorColor = Color.White,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
                     )
                 )
             },
             navigationIcon = {
                 IconButton(onClick = { onSearchActiveChange(false) }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Zamknij wyszukiwanie", tint = AnimonDarkGreen)
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Zamknij wyszukiwanie", tint = Color.White)
                 }
             },
             actions = {
                 if (searchQuery.isNotEmpty()) {
                     IconButton(onClick = { onSearchQueryChange("") }) {
-                        Icon(Icons.Default.Close, contentDescription = "Wyczyść", tint = AnimonDarkGreen)
+                        Icon(Icons.Default.Close, contentDescription = "Wyczyść", tint = Color.White)
                     }
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = AnimonGreen)
         )
     } else {
         TopAppBar(
             title = {
                 Text(
                     text = "Lista zwierząt",
-                    color = AnimonDarkGreen,
+                    color = Color.White,
                     fontSize = 22.sp
                 )
             },
@@ -232,11 +247,11 @@ fun ExpandableTopBar(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Szukaj",
-                        tint = AnimonDarkGreen
+                        tint = Color.White
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = AnimonGreen)
         )
     }
 }
@@ -300,8 +315,11 @@ fun SectorDropdown(
 }
 
 @Composable
-fun SectionHeader(title: String) {
-    Column(modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)) {
+fun SectionHeader(title: String, onClick: () -> Unit) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .clickable { onClick() }
+        .padding(top = 16.dp, bottom = 8.dp)) {
         Text(
             text = title,
             color = Color.DarkGray,
@@ -376,11 +394,14 @@ fun AnimalCard(name: String, photo: String, statusColor: Color, onClick: () -> U
 @Composable
 fun AddAnimalDialog(
     onDismiss: () -> Unit,
-    onConfirm: (name: String, species: String, location: String) -> Unit
+    onConfirm: (name: String, species: String, location: String, dateOfBirth: String, gender: String, size: String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var species by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
+    var dateOfBirth by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf("") }
+    var size by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -388,7 +409,12 @@ fun AddAnimalDialog(
             Text(text = "Dodaj nowe zwierzę", color = AnimonDarkGreen, fontWeight = FontWeight.Bold)
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -410,13 +436,34 @@ fun AddAnimalDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                OutlinedTextField(
+                    value = dateOfBirth,
+                    onValueChange = { dateOfBirth = it },
+                    label = { Text("Data urodzenia (np. 12.04.2019)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = gender,
+                    onValueChange = { gender = it },
+                    label = { Text("Płeć (np. Samiec)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = size,
+                    onValueChange = { size = it },
+                    label = { Text("Wielkość (np. Duży)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(name, species, location) },
+                onClick = { onConfirm(name, species, location, dateOfBirth, gender, size) },
                 colors = ButtonDefaults.buttonColors(containerColor = AnimonDarkGreen),
-                enabled = name.isNotBlank() && species.isNotBlank() && location.isNotBlank()
+                enabled = name.isNotBlank() && species.isNotBlank() && location.isNotBlank() && dateOfBirth.isNotBlank() && gender.isNotBlank() && size.isNotBlank()
             ) {
                 Text("Zapisz", color = Color.White)
             }

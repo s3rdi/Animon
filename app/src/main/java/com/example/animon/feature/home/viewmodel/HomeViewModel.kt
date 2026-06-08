@@ -21,6 +21,9 @@ data class Animal(
     val pulse: String = "",
     val appetite: String = "",
     val rabies_vaccination: String = "",
+    val date_of_birth: String = "",
+    val gender: String = "",
+    val size: String = "",
     var status: AnimalStatus = AnimalStatus.UNKNOWN
 )
 
@@ -145,11 +148,14 @@ class HomeViewModel : ViewModel() {
         }
     }
 
-    fun addAnimal(name: String, species: String, location: String) {
+    fun addAnimal(name: String, species: String, location: String, dateoOfBirth: String, gender: String, size: String) {
         val newAnimal = Animal(
             name = name.trim(),
             species = species.trim(),
-            location = location.trim()
+            location = location.trim(),
+            date_of_birth = dateoOfBirth.trim(),
+            gender = gender.trim(),
+            size = size.trim()
         )
 
         db.collection("animals").add(newAnimal)

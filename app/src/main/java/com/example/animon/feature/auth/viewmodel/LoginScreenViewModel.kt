@@ -54,11 +54,16 @@ class LoginScreenViewModel : ViewModel() {
                     _uiState.update { it.copy(isLoading = false, isLoginSuccessful = true) }
                     viewModelScope.launch { _loginEvent.emit(true) }
                 } else {
+                    val errorMsg = if (task.exception is com.google.firebase.FirebaseNetworkException) {
+                        "Brak połączenia z internetem. Nie można zautoryzować!"
+                    } else {
+                        "Podano niepoprawny email lub hasło!"
+                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isLoginSuccessful = false,
-                            errorMessage = "Podano niepoprawny email lub hasło!"
+                            errorMessage = errorMsg
                         )
                     }
                 }
