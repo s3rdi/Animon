@@ -115,6 +115,12 @@ fun AnimalDetailsScreen(
                         val updatedAnimal = currentAnimal.copy(name = newName)
                         viewModel.updateAnimalDocument(updatedAnimal)
                     }
+                },
+                onLocationClick = {
+                    animalData?.location.let { loc ->
+                        navController.previousBackStackEntry?.savedStateHandle?.set("filter_sector", loc)
+                        navController.popBackStack()
+                    }
                 }
             )
 
@@ -214,7 +220,8 @@ fun AnimalImage(imageName: String) {
 fun AnimalHeader(
     name: String,
     location: String,
-    onNameChanged: (String) -> Unit
+    onNameChanged: (String) -> Unit,
+    onLocationClick: () -> Unit
 ) {
     var isEditing by remember { mutableStateOf(false) }
     var editableName by remember(name) { mutableStateOf(name) }
@@ -258,6 +265,8 @@ fun AnimalHeader(
 
     Row(
         modifier = Modifier
+            .clip(RoundedCornerShape(50.dp))
+            .clickable { onLocationClick() }
             .background(
                 color = AnimonGreen.copy(alpha = 0.12f),
                 shape = RoundedCornerShape(50.dp)

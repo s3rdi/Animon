@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.animon.core.designsystem.AnimonBeige
 import com.example.animon.core.designsystem.AnimonDarkGreen
 import com.example.animon.core.designsystem.AnimonGreen
@@ -40,6 +41,7 @@ import com.example.animon.feature.home.viewmodel.HomeViewModel
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
+    navController: NavController,
     onAnimalClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -47,6 +49,15 @@ fun HomeScreen(
     var isSearchActive by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var showAddAnimalDialog by remember { mutableStateOf(false) }
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    val filterSector = savedStateHandle?.get<String>("filter_sector")
+
+    LaunchedEffect(filterSector) {
+        if (filterSector != null) {
+            viewModel.onSectorSelected(filterSector)
+            savedStateHandle.remove<String>("filter_sector")
+        }
+    }
 
     val availableSectors = uiState.animals
         .map { it.location }
