@@ -84,7 +84,7 @@ fun MainAppContainer(rootNavController: NavHostController) {
     val notificationsViewModel: NotificationsViewModel = viewModel()
 
     val notifications by notificationsViewModel.notifications.collectAsState()
-    val notificationCount = notifications.size
+    val notificationCount = notifications.count { !it.isRead }
 
     Scaffold(
         bottomBar = {

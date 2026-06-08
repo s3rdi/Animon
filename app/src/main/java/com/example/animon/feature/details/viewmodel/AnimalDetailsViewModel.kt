@@ -261,9 +261,10 @@ class AnimalDetailsViewModel (
                     "userId" to targetUserId,
                     "animalId" to aId,
                     "title" to "Aktualizacja stanu: ${animal.name}",
-                    "message" to "Heurystyka wykazuje status: ${status.label}",
+                    "message" to "Zmiana stanu na: ${status.label}",
                     "timestamp" to FieldValue.serverTimestamp(),
-                    "status" to status.name
+                    "status" to status.name,
+                    "isRead" to false
                 )
 
                 batch.set(notificationDocRef, notificationData, SetOptions.merge())

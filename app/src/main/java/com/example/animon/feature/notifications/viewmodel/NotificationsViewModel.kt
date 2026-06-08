@@ -16,7 +16,8 @@ data class InAppNotification(
     val status: String = "",
     val animalId: String = "",
     val timestamp: Long = 0L,
-    val formattedDate: String = ""
+    val formattedDate: String = "",
+    val isRead: Boolean = false
 )
 
 class NotificationsViewModel : ViewModel() {
@@ -55,11 +56,20 @@ class NotificationsViewModel : ViewModel() {
                         status = doc.getString("status") ?: "",
                         animalId = doc.getString("animalId") ?: "",
                         timestamp = firebaseTimestamp,
-                        formattedDate = formattedStr
+                        formattedDate = formattedStr,
+                        isRead = doc.getBoolean("isRead") ?: false
                     )
                 }
                 _notifications.value = list.sortedByDescending { it.timestamp }
             }
+    }
+
+    fun markAsRead(notificationId: String) {
+        if (notificationId.isBlank()) return
+
+        db.collection("notifications")
+            .document(notificationId)
+            .update("isRead", true)
     }
 
     fun deleteNotification(notificationId: String) {
