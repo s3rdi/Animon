@@ -125,7 +125,7 @@ fun HomeScreen(
 
                         groupedAnimals.forEach { (sectorName, animalsInSector) ->
                             item(span = { GridItemSpan(3) }) {
-                                SectionHeader(title = sectorName)
+                                SectionHeader(title = sectorName, onClick = { viewModel.onSectorSelected(sectorName)})
                             }
 
                             items(animalsInSector.size) { index ->
@@ -302,8 +302,11 @@ fun SectorDropdown(
 }
 
 @Composable
-fun SectionHeader(title: String) {
-    Column(modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)) {
+fun SectionHeader(title: String, onClick: () -> Unit) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .clickable { onClick() }
+        .padding(top = 16.dp, bottom = 8.dp)) {
         Text(
             text = title,
             color = Color.DarkGray,
