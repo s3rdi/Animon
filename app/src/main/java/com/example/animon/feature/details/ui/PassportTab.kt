@@ -120,7 +120,9 @@ fun PassportContent(
         if (sections.isEmpty()) {
             Text(
                 text = "Brak danych paszportowych dla tego zwierzęcia.",
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 textAlign = TextAlign.Center
             )
         } else {
