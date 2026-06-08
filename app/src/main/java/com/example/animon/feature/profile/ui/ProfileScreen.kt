@@ -18,11 +18,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -39,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.animon.core.designsystem.AnimonGreen
 import com.example.animon.core.designsystem.AnimonTileBeige
 import com.example.animon.core.designsystem.AnimonTileGreen
@@ -48,6 +51,7 @@ import com.example.animon.feature.profile.viewmodel.ProfileViewModel
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = viewModel(),
+    navController: NavController,
     onLogout: () -> Unit
 ) {
     val profileData by viewModel.profileState.collectAsState()
@@ -57,11 +61,20 @@ fun ProfileScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("")
+                    Text("Konto")
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Cofnij",
+                            tint = Color.White
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = AnimonGreen,
-                    titleContentColor = AnimonTileBeige
+                    titleContentColor = Color.White
                 )
             )
         }

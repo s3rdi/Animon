@@ -186,7 +186,7 @@ fun MainAppContainer(rootNavController: NavHostController) {
             }
 
             composable(route = "my_profile") {
-                ProfileScreen(onLogout = {
+                ProfileScreen(navController = internalNavController, onLogout = {
                     rootNavController.navigate("login") {
                         popUpTo("main") { inclusive = true }
                     }
@@ -196,7 +196,7 @@ fun MainAppContainer(rootNavController: NavHostController) {
             composable(route = "profile/{userId}",
                 arguments = listOf(navArgument("userId") { type = NavType.StringType })
             ) {
-                ProfileScreen(onLogout = {
+                ProfileScreen(navController = internalNavController, onLogout = {
                     rootNavController.navigate("login") {
                         popUpTo("main") { inclusive = true }
                     }
