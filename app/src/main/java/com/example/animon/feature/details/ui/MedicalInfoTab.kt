@@ -142,6 +142,38 @@ fun MedicalInfoTile(
     var isExpanded by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(
+                    text = "Usuń wpis medyczny",
+                    fontWeight = FontWeight.Bold,
+                    color = AnimonGreen
+                )
+            },
+            text = { Text("Czy na pewno chcesz bezpowrotnie usunąć ten wpis medyczny?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDelete()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE57373))
+                ) {
+                    Text("Usuń", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Anuluj", color = AnimonGreen)
+                }
+            }
+        )
+    }
+
     if (showEditDialog) {
         EditMedicalRecordDialog(
             initialTitle = title,
@@ -253,7 +285,7 @@ fun MedicalInfoTile(
                         }
 
                         OutlinedButton(
-                            onClick = { onDelete() },
+                            onClick = { showDeleteDialog = true },
                             shape = RoundedCornerShape(8.dp),
                             border = BorderStroke(
                                 width = 1.dp,

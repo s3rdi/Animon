@@ -66,6 +66,38 @@ fun PassportContent(
     var activeSectionForFieldDialog by remember { mutableStateOf<PassportSection?>(null) }
     var activeFieldForEdit by remember { mutableStateOf<Pair<String, String>?>(null) }
 
+    var sectionToDelete by remember { mutableStateOf<PassportSection?>(null) }
+
+    sectionToDelete?.let { section ->
+        AlertDialog(
+            onDismissRequest = { sectionToDelete = null },
+            title = {
+                 Text(
+                     text = "Usuń sekcję paszportu",
+                     fontWeight = FontWeight.Bold,
+                     color = AnimonGreen
+                 )
+            },
+            text = { Text("Czy na pewno chcesz usunąć sekcję „${section.title}” wraz ze wszystkimi jej wpisami?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deletePassportSection(section.id)
+                        sectionToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
+                ) {
+                    Text("Usuń", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { sectionToDelete = null }) {
+                    Text("Anuluj", color = AnimonGreen)
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -98,7 +130,7 @@ fun PassportContent(
                     isVet = isVet,
                     onEditSection = { activeSectionForDialog = section },
                     onDeleteSection = {
-                        viewModel.deletePassportSection(section.id)
+                        sectionToDelete = section
                     },
                     onAddItem = {
                         activeSectionForFieldDialog = section
