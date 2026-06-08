@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -179,8 +181,8 @@ fun HomeScreen(
     if (showAddAnimalDialog) {
         AddAnimalDialog(
             onDismiss = { showAddAnimalDialog = false },
-            onConfirm = { name, species, location ->
-                viewModel.addAnimal(name, species, location)
+            onConfirm = { name, species, location, dateOfBirth, gender, size ->
+                viewModel.addAnimal(name, species, location, dateOfBirth, gender, size)
                 showAddAnimalDialog = false
             }
         )
@@ -392,11 +394,14 @@ fun AnimalCard(name: String, photo: String, statusColor: Color, onClick: () -> U
 @Composable
 fun AddAnimalDialog(
     onDismiss: () -> Unit,
-    onConfirm: (name: String, species: String, location: String) -> Unit
+    onConfirm: (name: String, species: String, location: String, dateOfBirth: String, gender: String, size: String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var species by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
+    var dateOfBirth by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf("") }
+    var size by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -404,7 +409,12 @@ fun AddAnimalDialog(
             Text(text = "Dodaj nowe zwierzę", color = AnimonDarkGreen, fontWeight = FontWeight.Bold)
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -426,13 +436,34 @@ fun AddAnimalDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                OutlinedTextField(
+                    value = dateOfBirth,
+                    onValueChange = { dateOfBirth = it },
+                    label = { Text("Data urodzenia (np. 12.04.2019)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = gender,
+                    onValueChange = { gender = it },
+                    label = { Text("Płeć (np. Samiec)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = size,
+                    onValueChange = { size = it },
+                    label = { Text("Wielkość (np. Duży)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(name, species, location) },
+                onClick = { onConfirm(name, species, location, dateOfBirth, gender, size) },
                 colors = ButtonDefaults.buttonColors(containerColor = AnimonDarkGreen),
-                enabled = name.isNotBlank() && species.isNotBlank() && location.isNotBlank()
+                enabled = name.isNotBlank() && species.isNotBlank() && location.isNotBlank() && dateOfBirth.isNotBlank() && gender.isNotBlank() && size.isNotBlank()
             ) {
                 Text("Zapisz", color = Color.White)
             }
