@@ -27,6 +27,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -161,7 +162,7 @@ fun MedicalInfoTile(
                         onDelete()
                         showDeleteDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE57373))
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
                 ) {
                     Text("Usuń", color = Color.White)
                 }
@@ -289,10 +290,10 @@ fun MedicalInfoTile(
                             shape = RoundedCornerShape(8.dp),
                             border = BorderStroke(
                                 width = 1.dp,
-                                color = Color(0xFFE57373).copy(alpha = 0.6f)
+                                color = Color(0xFFF44336)
                             ),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color(0xFFE57373)
+                                contentColor = Color(0xFFF44336)
                             ),
                             contentPadding = PaddingValues(
                                 horizontal = 14.dp,
@@ -364,6 +365,8 @@ fun AddMedicalRecordDialog(
         SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date())
     }
 
+    val isFormValid = title.isNotBlank() && description.isNotBlank()
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(text = "Dodaj wpis medyczny", fontWeight = FontWeight.Bold, color = AnimonGreen) },
@@ -371,10 +374,13 @@ fun AddMedicalRecordDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = title,
-                    onValueChange = { title = it },
+                    onValueChange = {
+                        title = it
+                    },
                     label = { Text("Tytuł wpisu") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
+
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -382,6 +388,7 @@ fun AddMedicalRecordDialog(
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
                 )
+
                 OutlinedTextField(
                     value = currentDate,
                     onValueChange = {  },
@@ -393,8 +400,13 @@ fun AddMedicalRecordDialog(
         },
         confirmButton = {
             Button(
-                onClick = { if (title.isNotBlank()) onConfirm(title, description, currentDate) },
-                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen)
+                onClick = {
+                    if (isFormValid) {
+                        onConfirm(title.trim(), description.trim(), currentDate)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen),
+                enabled = isFormValid
             ) {
                 Text("Zapisz", color = AnimonBeige)
             }
@@ -417,6 +429,8 @@ fun EditMedicalRecordDialog(
     var title by remember { mutableStateOf(initialTitle) }
     var description by remember { mutableStateOf(initialDescription) }
 
+    val isFormValid = title.isNotBlank() && description.isNotBlank()
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(text = "Edytuj wpis medyczny", fontWeight = FontWeight.Bold, color = AnimonGreen) },
@@ -428,6 +442,7 @@ fun EditMedicalRecordDialog(
                     label = { Text("Tytuł wpisu") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -439,10 +454,15 @@ fun EditMedicalRecordDialog(
         },
         confirmButton = {
             Button(
-                onClick = { if (title.isNotBlank()) onConfirm(title, description) },
-                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen)
+                onClick = {
+                    if (isFormValid) {
+                        onConfirm(title.trim(), description.trim())
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen),
+                enabled = isFormValid
             ) {
-                Text("Zapisz zmiany", color = AnimonBeige)
+                Text("Zapisz", color = AnimonBeige)
             }
         },
         dismissButton = {

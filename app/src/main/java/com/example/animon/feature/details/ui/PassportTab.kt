@@ -362,6 +362,8 @@ fun PassportSectionDialog(
     var title by remember { mutableStateOf(initialTitle) }
     var subtitle by remember { mutableStateOf(initialSubtitle) }
 
+    val isFormValid = title.isNotBlank() && subtitle.isNotBlank()
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (initialTitle.isEmpty()) "Dodaj sekcję" else "Edytuj sekcję") },
@@ -370,7 +372,7 @@ fun PassportSectionDialog(
                 OutlinedTextField(
                     value = subtitle,
                     onValueChange = { subtitle = it },
-                    label = { Text("Podtytuł (np. SEKCJA I)") },
+                    label = { Text("Podtytuł") },
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
@@ -382,10 +384,22 @@ fun PassportSectionDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(title, subtitle) }) { Text("Zapisz") }
+            Button(
+                onClick = {
+                    if (isFormValid) {
+                        onConfirm(title.trim(), subtitle.trim())
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen),
+                enabled = isFormValid
+            ) {
+                Text("Zapisz", color = AnimonBeige)
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Anuluj") }
+            TextButton(onClick = onDismiss) {
+                Text("Anuluj", color = AnimonGreen)
+            }
         }
     )
 }
@@ -400,6 +414,8 @@ fun PassportItemDialog(
 ) {
     var label by remember { mutableStateOf(initialLabel) }
     var value by remember { mutableStateOf(initialValue) }
+
+    val isFormValid = label.isNotBlank() && value.isNotBlank()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -422,10 +438,22 @@ fun PassportItemDialog(
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(label, value) }) { Text("Zapisz") }
+            Button(
+                onClick = {
+                    if (isFormValid) {
+                        onConfirm(label.trim(), value.trim())
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = AnimonGreen),
+                enabled = isFormValid
+            ) {
+                Text("Zapisz", color = AnimonBeige)
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Anuluj") }
+            TextButton(onClick = onDismiss) {
+                Text("Anuluj", color = AnimonGreen)
+            }
         }
     )
 }
