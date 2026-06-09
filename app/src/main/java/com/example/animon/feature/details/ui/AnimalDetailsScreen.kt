@@ -57,8 +57,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.example.animon.core.designsystem.AnimonDarkGreen
-import com.example.animon.core.designsystem.AnimonTileBeige
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
