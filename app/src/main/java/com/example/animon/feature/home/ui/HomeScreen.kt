@@ -141,14 +141,17 @@ fun HomeScreen(
                                 SectionHeader(title = sectorName, onClick = { viewModel.onSectorSelected(sectorName)})
                             }
 
-                            items(animalsInSector.size) { index ->
+                            items(
+                                count = animalsInSector.size,
+                                key = { index -> animalsInSector[index].id }
+                            ) { index ->
                                 val animal = animalsInSector[index]
                                 AnimalCard(
                                     name = animal.name,
                                     photo = animal.photo,
                                     statusColor = animal.status.color,
                                     onClick = { onAnimalClick(animal.id) }
-                                    )
+                                )
                             }
                         }
                     }

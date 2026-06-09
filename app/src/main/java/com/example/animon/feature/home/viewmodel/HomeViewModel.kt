@@ -24,6 +24,7 @@ data class Animal(
     val date_of_birth: String = "",
     val gender: String = "",
     val size: String = "",
+    val calculated_status: String = "",
     var status: AnimalStatus = AnimalStatus.UNKNOWN
 )
 
@@ -81,7 +82,15 @@ class HomeViewModel : ViewModel() {
                 val fetchedAnimals = snapshot.documents.mapNotNull { document ->
                     val animal = document.toObject(Animal::class.java)?.copy(id = document.id)
                     animal?.apply {
-                        this.status = calculateStatusForList(this, normsMap)
+                        this.status = if (this.calculated_status.isNotBlank()) {
+                            try {
+                                AnimalStatus.valueOf(this.calculated_status)
+                            } catch (e: Exception) {
+                                AnimalStatus.UNKNOWN
+                            }
+                        } else {
+                            calculateStatusForList(this, normsMap)
+                        }
                     }
                 }
 
