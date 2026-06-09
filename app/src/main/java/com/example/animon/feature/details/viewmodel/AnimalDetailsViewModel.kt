@@ -227,7 +227,7 @@ class AnimalDetailsViewModel (
         val currentNorms = _normsState.value ?: return
 
         val newStatus = calculateHeuristicStatus(updatedData, currentNorms)
-        val oldStatusString = updatedData.calculated_status // Sprawdzamy status z przekazanego obiektu
+        val oldStatusString = updatedData.calculated_status
 
         val oldStatus = try {
             AnimalStatus.valueOf(oldStatusString)
